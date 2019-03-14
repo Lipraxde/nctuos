@@ -35,6 +35,10 @@ int mon_kerninfo(int argc, char **argv)
    *       Use PROVIDE inside linker script and calculate the
    *       offset.
    */
+	extern char kernel_load_addr, etext, end;
+	cprintf("Kernel code section size = 0x%08x\n", &etext-&kernel_load_addr);
+	cprintf("Kernel data section size = 0x%08x\n", &end-&etext);
+	cprintf("Kernel memory footprint size = 0x%08x\n", &end-&kernel_load_addr);
 	return 0;
 }
 int print_tick(int argc, char **argv)
