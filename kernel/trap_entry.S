@@ -17,6 +17,8 @@
 
 .text
 	TRAPHANDLER_NOEC(default_trap_entry, T_DEFAULT)
+	TRAPHANDLER_NOEC(kbd_trap_entry, IRQ_OFFSET+IRQ_KBD)
+	TRAPHANDLER_NOEC(timer_trap_entry, IRQ_OFFSET+IRQ_TIMER)
 
 /* TODO: Interface declaration for ISRs
  * Note: Use TRAPHANDLER_NOEC macro define other isr enrty

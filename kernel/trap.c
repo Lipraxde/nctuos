@@ -2,6 +2,12 @@
 #include <inc/mmu.h>
 #include <inc/x86.h>
 
+extern void default_trap_entry();	// trap_entry.S
+extern void kbd_trap_entry();		// trap_entry.S
+extern void timer_trap_entry();		// trap_entry.S
+extern void timer_handler();
+extern void kbd_intr();
+
 /* For debugging, so print_trapframe can distinguish between printing
  * a saved trapframe and printing the current trapframe and print some
  * additional information in the latter case.
@@ -120,8 +126,18 @@ trap_dispatch(struct Trapframe *tf)
    *       already. Please reference in kernel/kbd.c and kernel/timer.c
    */
 
-	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
+	switch (tf->tf_trapno) {
+	case IRQ_OFFSET+IRQ_KBD:
+		timer_handler();
+		break;
+	case IRQ_OFFSET+IRQ_TIMER:
+		kbd_intr();
+		break;
+	default:
+		// Unexpected trap: The user process or the kernel has a bug.
+		print_trapframe(tf);
+	}
+
 }
 
 /* 
@@ -162,8 +178,9 @@ void trap_init()
    *       come in handy for you when filling up the argument of "lidt"
    */
 
-	extern void default_trap_entry();	// trap_entry.S
 	SETGATE(idt[0], 0, GD_KT, default_trap_entry, 0);
+	SETGATE(idt[IRQ_OFFSET+IRQ_KBD], 0, GD_KT, kbd_trap_entry, 0);
+	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, timer_trap_entry, 0);
 	/* Keyboard interrupt setup */
 	/* Timer Trap setup */
   /* Load IDT */

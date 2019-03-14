@@ -14,8 +14,8 @@ void kernel_main(void)
 	pic_init();
   /* TODO: You should uncomment them
    */
-	// kbd_init();
-	// timer_init();
+	kbd_init();
+	timer_init();
 	trap_init();
 
 	/* Enable interrupt */
