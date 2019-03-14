@@ -13,6 +13,7 @@ int	getc(void);
 //lib/screen.c
 void	putch(unsigned char c);
 void	puts(unsigned char *text);
+void	settextcolor(unsigned char forecolor, unsigned char backcolor);
 
 // lib/printfmt.c
 void	printfmt(void (*putch)(int, void*), void *putdat, const char *fmt, ...);
