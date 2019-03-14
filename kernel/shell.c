@@ -45,9 +45,9 @@ int mon_kerninfo(int argc, char **argv)
    *       offset.
    */
 	extern char kernel_load_addr, etext, end;
-	cprintf("Kernel code section size = 0x%08x\n", &etext-&kernel_load_addr);
-	cprintf("Kernel data section size = 0x%08x\n", &end-&etext);
-	cprintf("Kernel memory footprint size = 0x%08x\n", &end-&kernel_load_addr);
+	cprintf("Kernel code base start=0x%08x size = %d\n", &kernel_load_addr, &etext-&kernel_load_addr);
+	cprintf("Kernel data base start=0x%08x size = %d\n", &etext, &end-&etext);
+	cprintf("Kernel memory footprint size = %dKB\n", (int)(&end-&kernel_load_addr)/1000);
 	return 0;
 }
 

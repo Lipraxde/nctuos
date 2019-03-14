@@ -19,7 +19,6 @@ void kernel_main(void)
 	trap_init();
 
 	/* Enable interrupt */
-	__asm __volatile("int $0x0");
 	__asm __volatile("sti");
 
 	shell();
