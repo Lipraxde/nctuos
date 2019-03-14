@@ -128,10 +128,10 @@ trap_dispatch(struct Trapframe *tf)
 
 	switch (tf->tf_trapno) {
 	case IRQ_OFFSET+IRQ_KBD:
-		timer_handler();
+		kbd_intr();
 		break;
 	case IRQ_OFFSET+IRQ_TIMER:
-		kbd_intr();
+		timer_handler();
 		break;
 	default:
 		// Unexpected trap: The user process or the kernel has a bug.
