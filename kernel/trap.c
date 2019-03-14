@@ -15,7 +15,7 @@ static struct Trapframe *last_tf;
  *       Interrupt descriptor table must be built at run time because shifted
  *       function addresses can't be represented in relocation records.
  */
-struct Gatedesc idt[256];
+struct Gatedesc idt[256] = {0};
 
 struct Pseudodesc idt_pd = {sizeof(idt)-1, (uint32_t)idt};
 
@@ -162,6 +162,8 @@ void trap_init()
    *       come in handy for you when filling up the argument of "lidt"
    */
 
+	extern void default_trap_entry();	// trap_entry.S
+	SETGATE(idt[0], 0, GD_KT, default_trap_entry, 0);
 	/* Keyboard interrupt setup */
 	/* Timer Trap setup */
   /* Load IDT */

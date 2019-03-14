@@ -16,6 +16,7 @@
 
 
 .text
+	TRAPHANDLER_NOEC(default_trap_entry, T_DEFAULT)
 
 /* TODO: Interface declaration for ISRs
  * Note: Use TRAPHANDLER_NOEC macro define other isr enrty
@@ -37,8 +38,17 @@ _alltraps:
    *       pushing all the general purpose registers into the stack.
 	 */
 
+	pushl %ds
+	pushl %es
+	pushal
+
 	pushl %esp # Pass a pointer which points to the Trapframe as an argument to default_trap_handler()
 	call default_trap_handler
+	popl  %esp
+
+	popal
+	popl  %es
+	popl  %ds
 
 	add $8, %esp # Cleans up the pushed error code and pushed ISR number
 	iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
