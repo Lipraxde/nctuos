@@ -28,7 +28,7 @@ void scroll(void)
 
         /* Finally, we set the chunk of memory that occupies
         *  the last line of text to our 'blank' character */
-        memset (textmemptr + (25 - temp) * 80, blank, 80);
+        memset (textmemptr + (25 - temp) * 80, blank, 160);
         csr_y = 25 - 1;
     }
 }
@@ -70,7 +70,7 @@ void cls()
     /* Sets the entire screen to spaces in our current
     *  color */
     for(i = 0; i < 25; i++)
-        memset (textmemptr + i * 80, blank, 80);
+        memset (textmemptr + i * 80, blank, 160);
 
     /* Update out virtual cursor, and then move the
     *  hardware cursor */
