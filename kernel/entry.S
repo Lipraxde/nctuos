@@ -59,6 +59,7 @@ kgdtdesc:
 
 .bss
 	# There is kernel initial stack
+	.align		PGSIZE
 	.globl		bootstack
 bootstack:
 	.space		KSTKSIZE

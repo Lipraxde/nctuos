@@ -50,10 +50,14 @@ bootmain(void)
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
 	eph = ph + ELFHDR->e_phnum;
-	for (; ph < eph; ph++)
+	for (; ph < eph; ph++) {
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);
+		readseg(ph->p_pa, ph->p_filesz, ph->p_offset);
+		char *p = (char *)(ph->p_pa + ph->p_filesz);
+		for (; p < ph->p_pa + ph->p_memsz; ++p)
+			*p = 0;
+	}
 
 	// call the entry point from the ELF header
 	// note: does not return!
