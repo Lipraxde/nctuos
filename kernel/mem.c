@@ -361,8 +361,27 @@ page_decref(struct PageInfo* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Fill this function in
-    /* TODO */
+	pde_t *pde = pgdir + PDX(va);
+	pte_t *ret;
+
+	if (*pde & PTE_P) {
+		ret = (pte_t *)KADDR(PTE_ADDR(*pde));
+		return ret + PTX(va);
+	}
+
+	if (!create)
+		return 0;
+
+	struct PageInfo *p = page_alloc(ALLOC_ZERO);
+
+	if (!p)
+		return 0;
+
+	p->pp_ref += 1;
+	ret = page2pa(p);
+
+	*pde = (uintptr_t)ret | PTE_P | PTE_W;
+	return KADDR(ret + PTX(va));
 }
 
 //
@@ -427,7 +446,14 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-    /* TODO */
+	pte_t *pte = pgdir_walk(pgdir, va, 0);
+	if (!pte)
+		return 0;
+
+	if (pte_store)
+		*pte_store = pte;
+
+	return pa2page(PTE_ADDR(*pte));
 }
 
 //
