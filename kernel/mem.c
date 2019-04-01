@@ -292,7 +292,19 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-    /* TODO */
+	struct PageInfo *ret;
+
+	if (!page_free_list)
+		return 0;
+
+	ret = page_free_list;
+	page_free_list = page_free_list->pp_link;	
+	ret->pp_link = 0;
+
+	if (alloc_flags & ALLOC_ZERO)
+		memset(page2kva(ret), 0, PGSIZE);
+
+	return ret;
 }
 
 //
@@ -302,10 +314,15 @@ page_alloc(int alloc_flags)
 void
 page_free(struct PageInfo *pp)
 {
-	// Fill this function in
-	// Hint: You may want to panic if pp->pp_ref is nonzero or
-	// pp->pp_link is not NULL.
-    /* TODO */
+	struct PageInfo *tmp;
+
+	if (pp->pp_ref)
+		panic("pp->pp_ref != 0, %d");
+
+	tmp = page_free_list;
+	page_free_list = pp;
+	pp->pp_link = tmp;
+	
 }
 
 //
@@ -662,7 +679,6 @@ check_va2pa(pde_t *pgdir, uintptr_t va)
 		return ~0;
 	return PTE_ADDR(p[PTX(va)]);
 }
-
 
 // check page_insert, page_remove, &c
 static void
