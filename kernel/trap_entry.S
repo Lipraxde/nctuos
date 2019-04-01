@@ -17,6 +17,7 @@
 
 .text
 	TRAPHANDLER_NOEC(default_trap_entry, T_DEFAULT)
+	TRAPHANDLER_NOEC(pgflt_trap_entry, T_PGFLT)
 	TRAPHANDLER_NOEC(kbd_trap_entry, IRQ_OFFSET+IRQ_KBD)
 	TRAPHANDLER_NOEC(timer_trap_entry, IRQ_OFFSET+IRQ_TIMER)
 

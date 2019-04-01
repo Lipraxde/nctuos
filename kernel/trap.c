@@ -3,6 +3,7 @@
 #include <inc/x86.h>
 
 extern void default_trap_entry();	// trap_entry.S
+extern void pgflt_trap_entry();		// trap_entry.S
 extern void kbd_trap_entry();		// trap_entry.S
 extern void timer_trap_entry();		// trap_entry.S
 extern void timer_handler();
@@ -94,6 +95,13 @@ print_trapframe(struct Trapframe *tf)
 	}
 }
 
+void
+pgflt_handler(struct Trapframe *tf)
+{
+    cprintf("Page fault @ %p\n", rcr2());
+    while (1);
+}
+
 /* For debugging */
 void
 print_regs(struct PushRegs *regs)
@@ -127,6 +135,9 @@ trap_dispatch(struct Trapframe *tf)
    */
 
 	switch (tf->tf_trapno) {
+	case T_PGFLT:
+		pgflt_handler(tf);
+		break;
 	case IRQ_OFFSET+IRQ_KBD:
 		kbd_intr();
 		break;
@@ -136,6 +147,7 @@ trap_dispatch(struct Trapframe *tf)
 	default:
 		// Unexpected trap: The user process or the kernel has a bug.
 		print_trapframe(tf);
+		while(1);
 	}
 
 }
@@ -179,6 +191,7 @@ void trap_init()
    */
 
 	SETGATE(idt[0], 0, GD_KT, default_trap_entry, 0);
+	SETGATE(idt[T_PGFLT], 0, GD_KT, pgflt_trap_entry, 0);
 	SETGATE(idt[IRQ_OFFSET+IRQ_KBD], 0, GD_KT, kbd_trap_entry, 0);
 	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, timer_trap_entry, 0);
 	/* Keyboard interrupt setup */
