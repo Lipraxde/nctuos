@@ -12,7 +12,6 @@
 // These variables are set by i386_detect_memory()
 size_t npages;			// Amount of physical memory (in pages)
 static size_t npages_basemem;	// Amount of base memory (in pages)
-static char *nextfree;	// virtual address of next byte of free memory
 
 // These variables are set in mem_init()
 pde_t *kern_pgdir;		// Kernel's initial page directory
@@ -87,6 +86,9 @@ static void check_page_installed_pgdir(void);
 static void *
 boot_alloc(uint32_t n)
 {
+	// virtual address of next byte of free memory
+	static char *nextfree = 0;
+
 	char *result;
 
 	// Initialize nextfree if this is the first time.
@@ -125,8 +127,6 @@ void
 mem_init(void)
 {
 	uint32_t cr0;
-	nextfree = 0;
-	page_free_list = 0;
 
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
@@ -265,6 +265,7 @@ page_init(void)
 	// free pages!
 	size_t i;
 	size_t rest = PGNUM(PADDR(boot_alloc(0)));
+	page_free_list = 0;
 	for (i = 1; i < npages; i++) {
 		bool is_free = false;
 		if (i >= rest)
