@@ -95,13 +95,12 @@ boot_alloc(uint32_t n)
 	// Allocate a chunk large enough to hold 'n' bytes, then update
 	// nextfree.  Make sure nextfree is kept aligned
 	// to a multiple of PGSIZE.
-    if (n == 0)
-        return nextfree;
-    else if (n > 0)
-    {
-        result = nextfree;
-        nextfree += ROUNDUP(n, PGSIZE);
-    }
+	if (n == 0)
+		return nextfree;
+	else if (n > 0) {
+		result = nextfree;
+		nextfree += ROUNDUP(n, PGSIZE);
+	}
 
 	return result;
 }
@@ -119,8 +118,8 @@ void
 mem_init(void)
 {
 	uint32_t cr0;
-    nextfree = 0;
-    page_free_list = 0;
+	nextfree = 0;
+	page_free_list = 0;
 
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
