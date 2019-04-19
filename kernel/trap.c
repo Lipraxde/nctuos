@@ -1,8 +1,10 @@
 #include <kernel/trap.h>
+#include <inc/assert.h>
 #include <inc/mmu.h>
 #include <inc/x86.h>
 
 extern void default_trap_entry();	// trap_entry.S
+extern void default_errtrap_entry();	// trap_entry.S
 extern void pgflt_trap_entry();		// trap_entry.S
 extern void kbd_trap_entry();		// trap_entry.S
 extern void timer_trap_entry();		// trap_entry.S
@@ -125,7 +127,7 @@ trap_dispatch(struct Trapframe *tf)
 	default:
 		// Unexpected trap: The user process or the kernel has a bug.
 		print_trapframe(tf);
-		while(1);
+		panic("Unexpected trap!");
 	}
 
 }
@@ -146,12 +148,28 @@ void default_trap_handler(struct Trapframe *tf)
 
 void trap_init()
 {
-	SETGATE(idt[0], 0, GD_KT, default_trap_entry, 0);
-	SETGATE(idt[T_PGFLT], 0, GD_KT, pgflt_trap_entry, 0);
+	int i;
+
+	for (i = 0; i < 256; ++i) {
+		bool is_noec = true;
+		
+		if (i == T_DBLFLT || i == T_TSS || i == T_SEGNP || i == T_STACK ||
+			i == T_GPFLT || i == T_PGFLT || i == T_ALIGN)
+			is_noec = false;
+
+		if (is_noec)
+			SETGATE(idt[i], 0, GD_KT, default_trap_entry, 0);
+		else
+			SETGATE(idt[i], 0, GD_KT, default_errtrap_entry, 0);
+	}
+
 	/* Keyboard interrupt setup */
 	SETGATE(idt[IRQ_OFFSET+IRQ_KBD], 0, GD_KT, kbd_trap_entry, 0);
 	/* Timer Trap setup */
 	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, timer_trap_entry, 0);
+
+	SETGATE(idt[T_PGFLT], 0, GD_KT, pgflt_trap_entry, 0);
+
 	/* Load IDT */
 	lidt(&idt_pd);
 }

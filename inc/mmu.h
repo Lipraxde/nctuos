@@ -290,7 +290,7 @@ struct Gatedesc {
 //	  the privilege level required for software to invoke
 //	  this interrupt/trap gate explicitly using an int instruction.
 #define SETGATE(gate, istrap, sel, off, dpl)			\
-{								\
+do {								\
 	(gate).gd_off_15_0 = (uint32_t) (off) & 0xffff;		\
 	(gate).gd_sel = (sel);					\
 	(gate).gd_args = 0;					\
@@ -300,11 +300,11 @@ struct Gatedesc {
 	(gate).gd_dpl = (dpl);					\
 	(gate).gd_p = 1;					\
 	(gate).gd_off_31_16 = (uint32_t) (off) >> 16;		\
-}
+} while (0)
 
 // Set up a call gate descriptor.
 #define SETCALLGATE(gate, sel, off, dpl)           	        \
-{								\
+do {								\
 	(gate).gd_off_15_0 = (uint32_t) (off) & 0xffff;		\
 	(gate).gd_sel = (sel);					\
 	(gate).gd_args = 0;					\
@@ -314,7 +314,7 @@ struct Gatedesc {
 	(gate).gd_dpl = (dpl);					\
 	(gate).gd_p = 1;					\
 	(gate).gd_off_31_16 = (uint32_t) (off) >> 16;		\
-}
+} while (0)
 
 // Pseudo-descriptors used for LGDT, LLDT and LIDT instructions.
 struct Pseudodesc {
