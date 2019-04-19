@@ -21,26 +21,8 @@
 	TRAPHANDLER_NOEC(kbd_trap_entry, IRQ_OFFSET+IRQ_KBD)
 	TRAPHANDLER_NOEC(timer_trap_entry, IRQ_OFFSET+IRQ_TIMER)
 
-/* TODO: Interface declaration for ISRs
- * Note: Use TRAPHANDLER_NOEC macro define other isr enrty
- *       The Trap number are declared in inc/trap.h which might come in handy
- *       when declaring interface for ISRs.
- */
-
 .globl default_trap_handler;
 _alltraps:
-  /* TODO: Since we are going to call default_trap_handler, we have to prepare
-   *       the argument for it, which is placed on the stack.
-   *       Thus push registers to fillup the Trapframe data structure.
-   * 
-   * Note: The x86 CPU will automatically save some register when interrupts
-   *       occurs. Thus, you do not have to push those registers.
-   *       Please reference lab3.docx for what registers are pushed by
-   *       CPU.
-   *       You may want to leverage the "pusha" instructions to reduce your work of
-   *       pushing all the general purpose registers into the stack.
-	 */
-
 	pushl %ds
 	pushl %es
 	pushal

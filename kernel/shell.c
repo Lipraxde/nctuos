@@ -38,12 +38,6 @@ int mon_help(int argc, char **argv)
 
 int mon_kerninfo(int argc, char **argv)
 {
-	/* TODO: Print the kernel code and data section size 
-   * NOTE: You can count only linker script (kernel/kern.ld) to
-   *       provide you with those information.
-   *       Use PROVIDE inside linker script and calculate the
-   *       offset.
-   */
 	extern char kernel_load_addr, etext, end;
 	cprintf("Kernel code base start=0x%08x size = %d\n", &kernel_load_addr, &etext-&kernel_load_addr);
 	cprintf("Kernel data base start=0x%08x size = %d\n", &etext, &end-&etext);
