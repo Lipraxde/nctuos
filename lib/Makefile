@@ -2,6 +2,7 @@
 LIB_OBJS := lib/printfmt.o \
 	lib/readline.o \
 	lib/string.o \
+	lib/syscall.o \
 	kernel/screen.o # XXX: workaround
 
 $(OBJDIR)/lib/%.o: lib/%.c

@@ -8,6 +8,7 @@ extern void default_errtrap_entry();	// trap_entry.S
 extern void pgflt_trap_entry();		// trap_entry.S
 extern void kbd_trap_entry();		// trap_entry.S
 extern void timer_trap_entry();		// trap_entry.S
+extern void syscall_trap_entry();	// trap_entry.S
 extern void timer_handler();
 extern void kbd_intr();
 
@@ -170,6 +171,8 @@ void trap_init()
 	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, timer_trap_entry, 0);
 
 	SETGATE(idt[T_PGFLT], 0, GD_KT, pgflt_trap_entry, 0);
+
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, syscall_trap_entry, 3);
 
 	/* Load IDT */
 	lidt(&idt_pd);

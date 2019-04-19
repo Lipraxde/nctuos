@@ -36,6 +36,7 @@
 	TRAPHANDLER_NOEC(default_trap_entry, T_DEFAULT)
 	TRAPHANDLER_NOEC(kbd_trap_entry, IRQ_OFFSET+IRQ_KBD)
 	TRAPHANDLER_NOEC(timer_trap_entry, IRQ_OFFSET+IRQ_TIMER)
+	TRAPHANDLER_NOEC(syscall_trap_entry, T_SYSCALL)
 
 	TRAPHANDLER(default_errtrap_entry, T_DEFAULT)
 	TRAPHANDLER(pgflt_trap_entry, T_PGFLT)
