@@ -116,6 +116,7 @@ trap_dispatch(struct Trapframe *tf)
 {
 	switch (tf->tf_trapno) {
 	case T_PGFLT:
+		print_trapframe(tf);
 		pgflt_handler(tf);
 		break;
 	case IRQ_OFFSET+IRQ_KBD:

@@ -1,6 +1,5 @@
 #include <inc/stdio.h>
 #include <inc/kbd.h>
-#include <inc/shell.h>
 #include <inc/timer.h>
 #include <inc/x86.h>
 #include <kernel/trap.h>
@@ -26,5 +25,6 @@ void kernel_main(void)
 	ptr = (int*)(0x12345678);
 	// *ptr = 1;
 
-	shell();
+	cprintf("Success");
+	// shell();
 }
