@@ -15,16 +15,24 @@ CFLAGS += -I.
 
 OBJDIR = .
 
+all: kernel.img
 
-include boot/Makefile
-include kernel/Makefile
-
-all: boot/boot kernel/system
+$(OBJDIR)/kernel.img: boot/boot kernel/system
 	dd if=/dev/zero of=$(OBJDIR)/kernel.img count=10000 2>/dev/null
 	dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kernel.img conv=notrunc 2>/dev/null
 	dd if=$(OBJDIR)/kernel/system of=$(OBJDIR)/kernel.img seek=1 conv=notrunc 2>/dev/null
 
+include boot/Makefile
+include kernel/Makefile
+include lib/Makefile
+
 clean:
 	rm -rf $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
 	rm -rf $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
-	rm -rf $(OBJDIR)/lib/*.o
+	rm -rf $(OBJDIR)/lib/*.o ${OBJDIR}/lib/libnctuos.a
+
+qemu: $(OBJDIR)/kernel.img
+	qemu-system-i386 -hda kernel.img -monitor stdio
+
+debug: $(OBJDIR)/kernel.img
+	qemu-system-i386 -hda kernel.img -monitor stdio -s -S

@@ -28,19 +28,20 @@ KERN_OBJS = kernel/entry.o \
 	kernel/entrypgdir.o \
 	kernel/assert.o \
 	kernel/kclock.o \
-	kernel/shell.o \
 	kernel/timer.o \
 	lib/printfmt.o \
 	lib/readline.o \
 	lib/string.o
 
-kernel/%.o: kernel/%.c
-	$(CC) $(CFLAGS) -O0 -c -o $@ $<
+KERN_OBJS := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJS))
 
-kernel/%.o: kernel/%.S
-	$(CC) $(CFLAGS) -c -o $@ $<
+$(OBJDIR)/kernel/%.o: kernel/%.c
+	$(CC) $(CFLAGS) -nostdinc -O0 -c -o $@ $<
 
-kernel/system: $(KERN_OBJS)
+$(OBJDIR)/kernel/%.o: kernel/%.S
+	$(CC) $(CFLAGS) -nostdinc -c -o $@ $<
+
+$(OBJDIR)/kernel/system: $(KERN_OBJS)
 	@echo + ld kernel/system
 	$(LD) $(KERN_LDFLAGS) $(KERN_OBJS) $(GCC_LIB) -o $@
 	$(OBJDUMP) -S $@ > $@.asm
