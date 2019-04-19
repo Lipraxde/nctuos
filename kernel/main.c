@@ -1,3 +1,5 @@
+#include <inc/assert.h>
+#include <inc/elf.h>
 #include <inc/stdio.h>
 #include <inc/kbd.h>
 #include <inc/timer.h>
@@ -6,6 +8,8 @@
 #include <kernel/picirq.h>
 
 extern void init_video(void);
+extern struct Elf *load_elf(uint32_t pa, uint32_t offset);
+
 void kernel_main(void)
 {
 	int *ptr;

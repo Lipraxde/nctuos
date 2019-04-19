@@ -1,4 +1,9 @@
 
+LIB_OBJS := lib/printfmt.o \
+	lib/readline.o \
+	lib/string.o \
+	kernel/screen.o # XXX: workaround
+
 $(OBJDIR)/lib/%.o: lib/%.c
 	$(CC) $(CFLAGS) -nostdinc -O0 -c -o $@ $<
 
