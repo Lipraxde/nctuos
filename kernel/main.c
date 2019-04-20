@@ -33,11 +33,8 @@ struct Elf *ehdr = load_elf(0x800000, 5000*512);
 	ptr = (int*)(0x12345678);
 	// *ptr = 1;
 
-	cprintf("Success\n");
-
 	// Load cur_task pgdir
 	lcr3(PADDR(cur_task->pgdir));
-	cprintf("Success\n");
 
 	/* Move to user mode */
 	asm volatile("movl %0,%%eax\n\t" \

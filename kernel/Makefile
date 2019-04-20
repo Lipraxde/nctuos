@@ -18,7 +18,6 @@ KERN_SRCFILES := kernel/entry.S \
 		kernel/timer.c \
 		kernel/readelf.c \
 		lib/printfmt.c \
-		lib/readline.c \
 		lib/string.c
 
 KERN_OBJS = kernel/entry.o \
@@ -38,7 +37,6 @@ KERN_OBJS = kernel/entry.o \
 	kernel/timer.o \
 	kernel/readelf.o \
 	lib/printfmt.o \
-	lib/readline.o \
 	lib/string.o
 
 KERN_OBJS := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJS))

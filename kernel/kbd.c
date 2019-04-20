@@ -231,7 +231,8 @@ int getc(void)
 {
 	int c;
 
-	while ((c = cons_getc()) == 0)
-		/* do nothing */;
-	return c;
+	// Our task is switched to user mode, so dont block at there
+	// while ((c = cons_getc()) == 0)
+	// 	/* do nothing */;
+	return cons_getc();
 }
