@@ -1,5 +1,7 @@
+#include <inc/assert.h>
 #include <inc/syscall.h>
 #include <inc/trap.h>
+#include <kernel/task.h>
 #include <kernel/timer.h>
 
 // kernel/screen.c
@@ -27,13 +29,14 @@ do_getc(void)
 static int32_t
 do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
 {
-	int32_t retVal = -1;
+	int32_t retVal = 0;
 
 	switch (syscallno) {
 	case SYS_fork:
 		/* TODO: Lab 5
 		* You can reference kernel/task.c, kernel/task.h
 		*/
+		panic("undo\n");
 		break;
 	case SYS_getc:
 		retVal = do_getc();
@@ -43,47 +46,42 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		retVal = 0;
 		break;
 	case SYS_getpid:
-		/* TODO: Lab 5
-		* Get current task's pid
-		*/
+		retVal = cur_task->task_id;
 		break;
 	case SYS_sleep:
 		/* TODO: Lab 5
 		* Yield this task
 		* You can reference kernel/sched.c for yielding the task
 		*/
+		panic("undo\n");
 		break;
 	case SYS_kill:
 		/* TODO: Lab 5
 		* Kill specific task
 		* You can reference kernel/task.c, kernel/task.h
 		*/
+		panic("undo\n");
 		break;
 	case SYS_get_num_free_page:
 		/* TODO: Lab 5
 		 * You can reference kernel/mem.c
 		 */
+		panic("undo\n");
 		break;
 	case SYS_get_num_used_page:
 		/* TODO: Lab 5
 		 * You can reference kernel/mem.c
 		 */
+		panic("undo\n");
 		break;
 	case SYS_get_ticks:
-		/* TODO: Lab 5
-		 * You can reference kernel/timer.c
-		 */
 		retVal = get_tick();
 		break;
 	case SYS_settextcolor:
-		/* TODO: Lab 5
-		 * You can reference kernel/screen.c
-		 */
+		settextcolor(a1, a2);
 		break;
 	case SYS_cls:
-		/* TODO: Lab 5
-		 * You can reference kernel/screen.c
-		 */
+		cls();
 		break;
 	default:
 		return -1;
