@@ -17,6 +17,7 @@ static size_t npages_basemem;	// Amount of base memory (in pages)
 pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
 static struct PageInfo *page_free_list;	// Free list of physical pages
+static size_t num_free_pages;
 
 // Debug usage
 static void dump_pp(struct PageInfo *pp)
@@ -266,6 +267,7 @@ page_init(void)
 	size_t i;
 	size_t rest = PGNUM(PADDR(boot_alloc(0)));
 	page_free_list = 0;
+	num_free_pages = 0;
 	for (i = 1; i < npages; i++) {
 		bool is_free = false;
 		if (i >= rest)
@@ -278,6 +280,7 @@ page_init(void)
 			pages[i].pp_ref = 0;
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];
+			num_free_pages++;
 		}
 	}
 	// cprintf("PGUNM(IOPHY): %x, PGNUM(EXTPHY): %x\n", PGNUM(IOPHYSMEM),
@@ -308,6 +311,7 @@ page_alloc(int alloc_flags)
 	ret = page_free_list;
 	page_free_list = page_free_list->pp_link;	
 	ret->pp_link = 0;
+	num_free_pages--;
 
 	if (alloc_flags & ALLOC_ZERO)
 		memset(page2kva(ret), 0, PGSIZE);
@@ -330,7 +334,7 @@ page_free(struct PageInfo *pp)
 	tmp = page_free_list;
 	page_free_list = pp;
 	pp->pp_link = tmp;
-	
+	num_free_pages++;
 }
 
 //
@@ -529,6 +533,19 @@ tlb_invalidate(pde_t *pgdir, void *va)
 	invlpg(va);
 }
 
+/* This is the system call implementation of get_num_free_page */
+size_t
+get_num_free_page(void)
+{
+	return num_free_pages;
+}
+
+/* This is the system call implementation of get_num_used_page */
+size_t
+get_num_used_page(void)
+{
+	return npages - num_free_pages; 
+}
 
 // --------------------------------------------------------------
 // Checking functions.

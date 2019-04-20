@@ -63,16 +63,10 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		panic("undo\n");
 		break;
 	case SYS_get_num_free_page:
-		/* TODO: Lab 5
-		 * You can reference kernel/mem.c
-		 */
-		panic("undo\n");
+		retVal = get_num_free_page();
 		break;
 	case SYS_get_num_used_page:
-		/* TODO: Lab 5
-		 * You can reference kernel/mem.c
-		 */
-		panic("undo\n");
+		retVal = get_num_used_page();
 		break;
 	case SYS_get_ticks:
 		retVal = get_tick();

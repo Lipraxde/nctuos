@@ -80,4 +80,7 @@ page2kva(struct PageInfo *pp)
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
 
 void mem_init(void);
+size_t get_num_free_page(void);
+size_t get_num_used_page(void);
+
 #endif
