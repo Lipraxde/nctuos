@@ -1,5 +1,6 @@
 #include <inc/syscall.h>
-#include <inc/trap.h>
+
+#define T_SYSCALL	0x30
 
 #define SYSCALL_NOARG(name, ret_t) \
    ret_t name(void) { return syscall((SYS_##name), 0, 0, 0, 0, 0); }

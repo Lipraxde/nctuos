@@ -21,7 +21,7 @@ $(OBJDIR)/kernel.img: boot/boot kernel/system user/userprog
 	dd if=/dev/zero of=$(OBJDIR)/kernel.img count=10000 2>/dev/null
 	dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kernel.img conv=notrunc 2>/dev/null
 	dd if=$(OBJDIR)/kernel/system of=$(OBJDIR)/kernel.img seek=1 conv=notrunc 2>/dev/null
-	dd if=$(OBJDIR)/user/userprog of=$(OBJDIR)/kernel.img seek=500 conv=notrunc 2>/dev/null # XXX: Notice size of system
+	dd if=$(OBJDIR)/user/userprog of=$(OBJDIR)/kernel.img seek=5000 conv=notrunc 2>/dev/null # XXX: Notice size of system
 
 include boot/Makefile
 include kernel/Makefile

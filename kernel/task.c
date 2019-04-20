@@ -21,7 +21,7 @@
 // definition of gdt specifies the Descriptor Privilege Level (DPL)
 // of that descriptor: 0 for kernel and 3 for user.
 //
-struct Segdesc gdt[6] =
+static struct Segdesc gdt[6] =
 {
 	// 0x0 - unused (always faults -- for trapping NULL far pointers)
 	SEG_NULL,
@@ -44,21 +44,28 @@ struct Segdesc gdt[6] =
 	
 };
 
-struct Pseudodesc gdt_pd = {
+static struct Pseudodesc gdt_pd = {
 	sizeof(gdt) - 1, (unsigned long) gdt
 };
 
-
-
 static struct tss_struct tss;
-Task tasks[NR_TASKS];
+static struct Task *task_free_list;
+struct Task tasks[NR_TASKS];
 
-extern char bootstack[];
+extern char bootstacktop[];
 
-Task *cur_task = NULL; //Current running task
+struct Task *cur_task = NULL; //Current running task
 
-extern void sched_yield(void);
-
+static void
+region_alloc(struct Task *ts, void *va, size_t len)
+{
+	size_t size = ROUNDUP(va + len, PGSIZE) - ROUNDDOWN(va, PGSIZE);
+	int i;
+	for (i = 0; i < size; i += PGSIZE) {
+		struct PageInfo *page = page_alloc(0);
+		page_insert(ts->pgdir, page, va + i, PTE_P | PTE_W | PTE_U);
+	}
+}
 
 /* TODO: Lab5
  * 1. Find a free task structure for the new task,
@@ -87,16 +94,22 @@ extern void sched_yield(void);
  */
 int task_create()
 {
-	Task *ts = NULL;
+	struct Task *ts = NULL;
 
 	/* Find a free task structure */
+	if (task_free_list == NULL)
+		return -1;
+	ts = task_free_list;
+	task_free_list = ts->task_link;
 
-	// TODO
 	// /* Setup Page Directory and pages for kernel*/
 	// if (!(ts->pgdir = setupkvm()))
 	// 	panic("Not enough memory for per process page directory!\n");
+	// TODO
+	ts->pgdir = kern_pgdir;
 
 	/* Setup User Stack */
+	region_alloc(ts, (void *)(USTACKTOP - USR_STACK_SIZE), USR_STACK_SIZE);
 
 	/* Setup Trapframe */
 	memset( &(ts->tf), 0, sizeof(ts->tf));
@@ -105,9 +118,14 @@ int task_create()
 	ts->tf.tf_ds = GD_UD | 0x03;
 	ts->tf.tf_es = GD_UD | 0x03;
 	ts->tf.tf_ss = GD_UD | 0x03;
-	ts->tf.tf_esp = USTACKTOP-PGSIZE;
+	ts->tf.tf_esp = USTACKTOP;
 
 	/* Setup task structure (task_id and parent_id) */
+	ts->task_id = 0;
+	ts->parent_id = 0;
+
+	// cprintf("ret: %d\n", (ts - tasks));
+	return (ts - tasks);
 }
 
 
@@ -187,22 +205,23 @@ int sys_fork()
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
-void task_init()
+void task_init(uint32_t user_entry)
 {
-	extern int user_entry();
 	int i;
 
 	/* Initial task sturcture */
+	task_free_list = NULL;
 	for (i = 0; i < NR_TASKS; i++)
 	{
-		memset(&(tasks[i]), 0, sizeof(Task));
+		memset(&(tasks[i]), 0, sizeof(struct Task));
 		tasks[i].state = TASK_FREE;
-
+		task_free_list = &tasks[i];
 	}
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
 	memset(&(tss), 0, sizeof(tss));
-	tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
+	// Stack QAQ
+	tss.ts_esp0 = (uint32_t)bootstacktop;
 	tss.ts_ss0 = GD_KD;
 
 	// fs and gs stay in user data segment
@@ -223,11 +242,10 @@ void task_init()
 	// setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
 	// setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
 	// setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-	// cur_task->tf.tf_eip = (uint32_t)user_entry;
+	cur_task->tf.tf_eip = user_entry;
 	
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
-
 
 	lldt(0);
 
