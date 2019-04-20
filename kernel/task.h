@@ -15,9 +15,6 @@ typedef enum
 	TASK_STOP,
 } TaskState;
 
-// Each task's user space
-#define USR_STACK_SIZE	(4096)
-
 struct Task
 {
 	int task_id;

@@ -7,14 +7,6 @@
 #define NULL	((void *) 0)
 #endif /* !NULL */
 
-//lib/kbd.c
-int	getc(void);
-
-//lib/screen.c
-void	putch(unsigned char c);
-void	puts(unsigned char *text);
-void	settextcolor(unsigned char forecolor, unsigned char backcolor);
-
 // lib/printfmt.c
 void	printfmt(void (*putch)(int, void*), void *putdat, const char *fmt, ...);
 void	vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list);

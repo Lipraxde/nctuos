@@ -1,4 +1,5 @@
 #include <inc/stdio.h>
+#include <inc/syscall.h>
 #include <inc/error.h>
 
 #define BUFLEN 1024

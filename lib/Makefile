@@ -1,5 +1,6 @@
 
 LIB_OBJS := lib/printfmt.o \
+	lib/printf.o \
 	lib/readline.o \
 	lib/string.o \
 	lib/syscall.o \

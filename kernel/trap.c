@@ -11,6 +11,7 @@ extern void timer_trap_entry();		// trap_entry.S
 extern void syscall_trap_entry();	// trap_entry.S
 extern void timer_handler();
 extern void kbd_intr();
+extern void syscall_dispatch(struct Trapframe *tf);
 
 /* For debugging, so print_trapframe can distinguish between printing
  * a saved trapframe and printing the current trapframe and print some
@@ -18,7 +19,7 @@ extern void kbd_intr();
  */
 static struct Trapframe *last_tf;
 
-struct Gatedesc idt[256] = {0};
+struct Gatedesc idt[256] = {{0}};
 
 struct Pseudodesc idt_pd = {sizeof(idt)-1, (uint32_t)idt};
 
@@ -119,6 +120,9 @@ trap_dispatch(struct Trapframe *tf)
 	case T_PGFLT:
 		print_trapframe(tf);
 		pgflt_handler(tf);
+		break;
+	case T_SYSCALL:
+		syscall_dispatch(tf);
 		break;
 	case IRQ_OFFSET+IRQ_KBD:
 		kbd_intr();

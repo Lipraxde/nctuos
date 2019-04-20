@@ -2,9 +2,9 @@
 #include <inc/elf.h>
 #include <inc/stdio.h>
 #include <inc/kbd.h>
-#include <inc/timer.h>
 #include <inc/x86.h>
 #include <kernel/task.h>
+#include <kernel/timer.h>
 #include <kernel/trap.h>
 #include <kernel/picirq.h>
 

@@ -91,10 +91,4 @@ load_elf(uint32_t pa, uint32_t offset)
 	// note: does not return!
 	// ((void (*)(void)) (ehdr->e_entry))();
 	return ehdr;
-
-bad:
-	outw(0x8A00, 0x8A00);
-	outw(0x8A00, 0x8E00);
-	while (1)
-		/* do nothing */;
 }
