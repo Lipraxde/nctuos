@@ -114,6 +114,8 @@ setupvm(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa)
 	for (i = 0; i < size; i += PGSIZE) {
 		pte_t *pte = pgdir_walk(pgdir, (char *)va, 1);
 		*pte = pa | PTE_W | PTE_U | PTE_P;
+		// Why I need this? I do not find in TA code @@
+		pgdir[PDX(va)] |= PTE_U;
 		va += PGSIZE;
 		pa += PGSIZE;
 	}
