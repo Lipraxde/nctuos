@@ -33,10 +33,7 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 
 	switch (syscallno) {
 	case SYS_fork:
-		/* TODO: Lab 5
-		* You can reference kernel/task.c, kernel/task.h
-		*/
-		panic("undo\n");
+		retVal = sys_fork();
 		break;
 	case SYS_getc:
 		retVal = do_getc();
@@ -56,11 +53,7 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		panic("undo\n");
 		break;
 	case SYS_kill:
-		/* TODO: Lab 5
-		* Kill specific task
-		* You can reference kernel/task.c, kernel/task.h
-		*/
-		panic("undo\n");
+		sys_kill(a1);
 		break;
 	case SYS_get_num_free_page:
 		retVal = get_num_free_page();

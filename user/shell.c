@@ -103,7 +103,10 @@ static int runcmd(char *buf)
 	return 0;
 }
 
-
+void kill_self(void)
+{
+	kill(getpid());
+}
 
 void task_job()
 {
@@ -120,6 +123,19 @@ void task_job()
 int forktest(int argc, char **argv)
 {
 	/* Below code is running on user mode */
+	int pid = getpid();
+	cprintf("Im %d\n", pid);
+	pid = fork();
+	if (pid > 0)
+		cprintf("Parent\n");
+	else if (pid == 0)
+		cprintf("Child\n");
+	else
+		cprintf("Fork fail\n");
+
+	cprintf("After first fork\n");
+	return 0;
+
 	if (!fork()) {
 		/*Child*/
 		task_job();
@@ -136,7 +152,7 @@ int forktest(int argc, char **argv)
 		}
 	}
 	/* task recycle */
-	kill(0);
+	kill_self();
 	return 0;
 }
 

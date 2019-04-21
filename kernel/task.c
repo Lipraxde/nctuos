@@ -94,6 +94,8 @@ setupkvm(struct Task *t)
 	t->pgdir = (pde_t *)page2kva(p);
 	for (i = 0; i < NPDENTRIES; i++) {
 		t->pgdir[i] = kern_pgdir[i];
+		if (kern_pgdir[i] & PTE_P)
+			pa2page(PTE_ADDR(kern_pgdir[i]))->pp_ref++;
 	}
 	p->pp_ref++;
 
@@ -183,9 +185,9 @@ int task_create()
 	ts->tf.tf_esp = USTACKTOP;
 	ts->tf.tf_eflags = FL_IF;
 
-	/* Setup task structure (task_id and parent_id) */
-	ts->task_id = 0;
-	ts->parent_id = 0;
+	// /* Setup task structure (task_id and parent_id) */
+	// ts->task_id = ts - tasks;	// setup at init
+	// ts->parent_id = 0;		// setup at fork
 
 	return (ts - tasks);
 }
@@ -210,17 +212,33 @@ int task_create()
  */
 static void task_free(int pid)
 {
+	lcr3(PADDR(kern_pgdir));
+	struct Task *ts = &tasks[pid];
+	// Remove stack
+	uint32_t i = USTACKTOP - USR_STACK_SIZE;
+	for(; i < USTACKTOP; i += PGSIZE){
+		page_remove(ts->pgdir, i);
+	}
+	// Remove page table
+	for (i = 0; i < NPDENTRIES; i++) {
+		if (ts->pgdir[i] & PTE_P)
+			page_decref(pa2page(PTE_ADDR(ts->pgdir[i])));
+	}
+	// Remove page directory
+	page_free(pa2page(PADDR(ts->pgdir)));
+	ts->pgdir = NULL;
 }
 
 void sys_kill(int pid)
 {
 	if (pid > 0 && pid < NR_TASKS)
 	{
-	/* TODO: Lab 5
-	* Remember to change the state of tasks
-	* Free the memory
-	* and invoke the scheduler for yield
-	*/
+		struct Task *t = &tasks[pid];
+		task_free(pid);
+		t->state = TASK_FREE;
+		t->task_link = task_free_list;
+		task_free_list = t;
+		// sched_yield();
 	}
 }
 
@@ -252,15 +270,35 @@ int sys_fork()
 {
 	/* pid for newly created process */
 	int pid;
+	
 	if ((uint32_t)cur_task)
 	{
-	// TODO
-	// /* Step 4: All user program use the same code for now */
-	// setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-	// setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-	// setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-	// setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+		pid = task_create();
+		
+		if (pid < 0)
+			return -1;
+
+		// Copy trapframe
+		tasks[pid].tf = cur_task->tf;
+		// Copy stack
+		uint32_t i = USTACKTOP - USR_STACK_SIZE;
+		for(; i < USTACKTOP; i += PGSIZE){
+			struct PageInfo *pp = page_lookup(tasks[pid].pgdir, i , NULL);
+			memcpy((page2kva(pp)), i, PGSIZE);
+		}
+		// Setup virtual memory
+		setupvm(tasks[pid].pgdir, 0x800000, 64*PGSIZE, 0x800000);
+		// Setup child is runnable
+		tasks[pid].remind_ticks = TIME_QUANT;
+		tasks[pid].state = TASK_RUNNABLE;
+		// Child return 0
+		tasks[pid].tf.tf_regs.reg_eax = 0;;
+		// Setup child parent
+		tasks[pid].parent_id = cur_task->task_id;
+		return pid;
 	}
+
+	panic("fork but cur_task not exist!");
 }
 
 /* TODO: Lab5
@@ -273,10 +311,11 @@ void task_init(struct Elf *ehdr)
 
 	/* Initial task sturcture */
 	task_free_list = NULL;
-	for (i = 0; i < NR_TASKS; i++)
+	for (i = NR_TASKS; i >= 0; --i)
 	{
 		memset(&(tasks[i]), 0, sizeof(struct Task));
 		tasks[i].state = TASK_FREE;
+		tasks[i].task_link = task_free_list;
 		task_free_list = &tasks[i];
 	}
 	// Setup a TSS so that we get the right stack
