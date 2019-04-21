@@ -314,3 +314,23 @@ void task_init(struct Elf *ehdr)
 
 	cur_task->state = TASK_RUNNING;
 }
+
+//
+// Restores the register values in the Trapframe with the 'iret' instruction.
+// This exits the kernel and starts executing some environment's code.
+//
+// This function does not return.
+//
+void
+task_pop_tf(struct Trapframe *tf)
+{
+	asm volatile(
+		"\tmovl %0,%%esp\n"
+		"\tpopal\n"
+		"\tpopl %%es\n"
+		"\tpopl %%ds\n"
+		"\taddl $0x8,%%esp\n" /* skip tf_trapno and tf_errcode */
+		"\tiret\n"
+		: : "g" (tf) : "memory");
+	panic("iret failed");  /* mostly to placate the compiler */
+}

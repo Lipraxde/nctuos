@@ -46,15 +46,10 @@ _alltraps:
 	pushl %ds
 	pushl %es
 	pushal
+	/* Load the Kernel Data Segment descriptor */
+	mov $(GD_KD), %ax
+	mov %ax, %ds
+	mov %ax, %es
 
 	pushl %esp # Pass a pointer which points to the Trapframe as an argument to default_trap_handler()
 	call default_trap_handler
-	popl  %esp
-
-	popal
-	popl  %es
-	popl  %ds
-
-	add $8, %esp # Cleans up the pushed error code and pushed ISR number
-	iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
-

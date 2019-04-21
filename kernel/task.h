@@ -27,7 +27,7 @@ struct Task
 };
 
 void task_init();
-void env_pop_tf(struct Trapframe *tf);
+void task_pop_tf(struct Trapframe *tf) __attribute__((noreturn));
 
 void sys_kill(int pid);
 int sys_fork(void);

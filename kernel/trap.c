@@ -1,3 +1,4 @@
+#include <kernel/task.h>
 #include <kernel/trap.h>
 #include <inc/assert.h>
 #include <inc/mmu.h>
@@ -95,8 +96,8 @@ print_trapframe(struct Trapframe *tf)
 void
 pgflt_handler(struct Trapframe *tf)
 {
-    cprintf("Page fault @ %p\n", rcr2());
-    while (1);
+	cprintf("Page fault @ %p\n", rcr2());
+	while (1);
 }
 
 /* For debugging */
@@ -149,6 +150,7 @@ void default_trap_handler(struct Trapframe *tf)
 
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
+	task_pop_tf(tf);
 }
 
 
