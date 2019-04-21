@@ -123,22 +123,6 @@ void task_job()
 int forktest(int argc, char **argv)
 {
 	/* Below code is running on user mode */
-	int pid = getpid();
-	cprintf("Im %d\n", pid);
-	pid = fork();
-	if (pid > 0)
-		cprintf("Parent: %d\n", getpid());
-	else if (pid == 0) {
-		cprintf("Child: %d\n", getpid());
-		kill_self();
-		cprintf("Child??\n");
-	}
-	else
-		cprintf("Fork fail\n");
-
-	cprintf("After first fork\n");
-	return 0;
-
 	if (!fork()) {
 		/*Child*/
 		task_job();

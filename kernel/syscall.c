@@ -10,6 +10,9 @@ extern void putch(unsigned char c);
 // kernel/kbd.c
 extern int getc(void);
 
+// kernel/sched.c
+extern void sched_yield(void);
+
 static void
 do_puts(char *str, uint32_t len)
 {
@@ -46,11 +49,9 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		retVal = cur_task->task_id;
 		break;
 	case SYS_sleep:
-		/* TODO: Lab 5
-		* Yield this task
-		* You can reference kernel/sched.c for yielding the task
-		*/
-		panic("undo\n");
+		cur_task->state = TASK_SLEEP;
+		cur_task->remind_ticks = a1;
+		sched_yield();
 		break;
 	case SYS_kill:
 		sys_kill(a1);
