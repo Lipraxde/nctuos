@@ -1,3 +1,5 @@
+#include <inc/elf.h>
+#include <inc/error.h>
 #include <inc/mmu.h>
 #include <inc/types.h>
 #include <inc/string.h>
@@ -56,13 +58,75 @@ extern char bootstacktop[];
 
 struct Task *cur_task = NULL; //Current running task
 
+//
+// Initialize the kernel virtual memory layout for environment e.
+// Allocate a page directory, set e->env_pgdir accordingly,
+// and initialize the kernel portion of the new environment's address space.
+// Do NOT (yet) map anything into the user portion
+// of the environment's virtual address space.
+//
+// Returns 0 on success, < 0 on error.  Errors include:
+//	-E_NO_MEM if page directory or table could not be allocated.
+//
+static int
+setupkvm(struct Task *t)
+{
+	int i;
+	struct PageInfo *p = NULL;
+
+	// Allocate a page for the page directory
+	if (!(p = page_alloc(ALLOC_ZERO)))
+		return -E_NO_MEM;
+
+	// Hint:
+	//    - The VA space of all envs is identical above UTOP
+	//	(except at UVPT, which we've set below).
+	//	See inc/memlayout.h for permissions and layout.
+	//	Can you use kern_pgdir as a template?  Hint: Yes.
+	//	(Make sure you got the permissions right in Lab 2.)
+	//    - The initial VA below UTOP is empty.
+	//    - You do not need to make any more calls to page_alloc.
+	//    - Note: In general, pp_ref is not maintained for
+	//	physical pages mapped only above UTOP, but env_pgdir
+	//	is an exception -- you need to increment env_pgdir's
+	//	pp_ref for env_free to work correctly.
+	//    - The functions in kern/pmap.h are handy.
+	t->pgdir = (pde_t *)page2kva(p);
+	for (i = 0; i < NPDENTRIES; i++) {
+		t->pgdir[i] = kern_pgdir[i];
+	}
+	p->pp_ref++;
+
+	// UVPT maps the env's own page table read-only.
+	// Permissions: kernel R, user R
+	t->pgdir[PDX(UVPT)] = PADDR(t->pgdir) | PTE_P | PTE_U;
+
+	return 0;
+}
+
+// XXX: Now just map to physical address
+static void
+setupvm(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa)
+{
+	size_t i;
+	for (i = 0; i < size; i += PGSIZE) {
+		pte_t *pte = pgdir_walk(pgdir, (char *)va, 1);
+		*pte = pa | PTE_W | PTE_U | PTE_P;
+		va += PGSIZE;
+		pa += PGSIZE;
+	}
+}
+
 static void
 region_alloc(struct Task *ts, void *va, size_t len)
 {
 	size_t size = ROUNDUP(va + len, PGSIZE) - ROUNDDOWN(va, PGSIZE);
 	int i;
 	for (i = 0; i < size; i += PGSIZE) {
+		// XXX
 		struct PageInfo *page = page_alloc(0);
+		if (!page)
+			panic("No page");
 		page_insert(ts->pgdir, page, va + i, PTE_P | PTE_W | PTE_U);
 	}
 }
@@ -103,10 +167,8 @@ int task_create()
 	task_free_list = ts->task_link;
 
 	// /* Setup Page Directory and pages for kernel*/
-	// if (!(ts->pgdir = setupkvm()))
-	// 	panic("Not enough memory for per process page directory!\n");
-	// TODO
-	ts->pgdir = kern_pgdir;
+	if (setupkvm(ts))
+		panic("Not enough memory for per process page directory!\n");
 
 	/* Setup User Stack */
 	region_alloc(ts, (void *)(USTACKTOP - USR_STACK_SIZE), USR_STACK_SIZE);
@@ -119,12 +181,12 @@ int task_create()
 	ts->tf.tf_es = GD_UD | 0x03;
 	ts->tf.tf_ss = GD_UD | 0x03;
 	ts->tf.tf_esp = USTACKTOP;
+	ts->tf.tf_eflags = FL_IF;
 
 	/* Setup task structure (task_id and parent_id) */
 	ts->task_id = 0;
 	ts->parent_id = 0;
 
-	// cprintf("ret: %d\n", (ts - tasks));
 	return (ts - tasks);
 }
 
@@ -205,7 +267,7 @@ int sys_fork()
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
-void task_init(uint32_t user_entry)
+void task_init(struct Elf *ehdr)
 {
 	int i;
 
@@ -236,13 +298,11 @@ void task_init(uint32_t user_entry)
 	i = task_create();
 	cur_task = &(tasks[i]);
 
-	// TODO
-	// /* For user program */
-	// setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-	// setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-	// setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-	// setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-	cur_task->tf.tf_eip = user_entry;
+	/* For user program */
+	setupvm(cur_task->pgdir, 0x800000, 64*PGSIZE, 0x800000);
+	extern void load_elf(struct Task *t, uint8_t *binary);
+	load_elf(cur_task, ehdr);
+	cur_task->tf.tf_eip = ehdr->e_entry;
 	
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);

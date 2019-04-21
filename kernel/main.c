@@ -23,8 +23,9 @@ void kernel_main(void)
 	trap_init();
 	mem_init();
 
-struct Elf *ehdr = load_elf(0x800000, 5000*512);
-	task_init(ehdr->e_entry);
+	// userprog address
+	struct Elf *ehdr = (struct Elf *)0xf0000000;
+	task_init(ehdr);
 
 	/* Enable interrupt */
 	__asm __volatile("sti");
@@ -44,7 +45,8 @@ struct Elf *ehdr = load_elf(0x800000, 5000*512);
 	"pushl %2\n\t" \
 	"pushl %3\n\t" \
 	"iret\n" \
-	:: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cur_task->tf.tf_eip)
+	:: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_KT | 0x00), "m" (cur_task->tf.tf_eip)
 	:"ax");
+	// :: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cur_task->tf.tf_eip)
 	panic("Kernel exit!!");
 }

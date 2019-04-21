@@ -230,6 +230,10 @@ mem_init(void)
 
 	// Some more checks, only possible after kern_pgdir is installed.
 	check_page_installed_pgdir();
+
+	// XXX: For test userprog
+	extern void readseg(uint32_t pa, uint32_t count, uint32_t offset);
+	readseg(KERNBASE, 64*PGSIZE, 5000*512);
 }
 
 // --------------------------------------------------------------
