@@ -105,7 +105,7 @@ static int runcmd(char *buf)
 
 void kill_self(void)
 {
-	kill(getpid());
+	kill(0);
 }
 
 void task_job()
@@ -127,9 +127,12 @@ int forktest(int argc, char **argv)
 	cprintf("Im %d\n", pid);
 	pid = fork();
 	if (pid > 0)
-		cprintf("Parent\n");
-	else if (pid == 0)
-		cprintf("Child\n");
+		cprintf("Parent: %d\n", getpid());
+	else if (pid == 0) {
+		cprintf("Child: %d\n", getpid());
+		kill_self();
+		cprintf("Child??\n");
+	}
 	else
 		cprintf("Fork fail\n");
 
