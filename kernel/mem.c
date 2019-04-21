@@ -16,6 +16,7 @@ static size_t npages_basemem;	// Amount of base memory (in pages)
 // These variables are set in mem_init()
 pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
+bool debug_page;		// Use to debug page leak
 static struct PageInfo *page_free_list;	// Free list of physical pages
 static size_t num_free_pages;
 
@@ -128,6 +129,7 @@ void
 mem_init(void)
 {
 	uint32_t cr0;
+	debug_page = false;
 
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
@@ -316,6 +318,8 @@ page_alloc(int alloc_flags)
 	page_free_list = page_free_list->pp_link;	
 	ret->pp_link = 0;
 	num_free_pages--;
+	if (debug_page)
+		cprintf("Alloca page: %x\n", ret);
 
 	if (alloc_flags & ALLOC_ZERO)
 		memset(page2kva(ret), 0, PGSIZE);
@@ -339,6 +343,8 @@ page_free(struct PageInfo *pp)
 	page_free_list = pp;
 	pp->pp_link = tmp;
 	num_free_pages++;
+	if (debug_page)
+		cprintf("Free page: %x\n", page_free_list);
 }
 
 //

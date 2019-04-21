@@ -6,6 +6,7 @@
 
 extern char bootstacktop[], bootstack[];
 
+extern bool debug_page;
 extern struct PageInfo *pages;
 extern size_t npages;
 

@@ -97,11 +97,11 @@ setupkvm(struct Task *t)
 		if (kern_pgdir[i] & PTE_P)
 			pa2page(PTE_ADDR(kern_pgdir[i]))->pp_ref++;
 	}
-	p->pp_ref++;
 
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
 	t->pgdir[PDX(UVPT)] = PADDR(t->pgdir) | PTE_P | PTE_U;
+	p->pp_ref++;
 
 	return 0;
 }
@@ -227,7 +227,9 @@ static void task_free(int pid)
 			page_decref(pa2page(PTE_ADDR(ts->pgdir[i])));
 	}
 	// Remove page directory
-	page_free(pa2page(PADDR(ts->pgdir)));
+	// We map pgdir to UVPT, remove page table will remove pgdir
+	// Umm... magic work! OwO
+	// page_free(pa2page(PADDR(ts->pgdir)));
 	ts->pgdir = NULL;
 }
 
@@ -242,6 +244,7 @@ void sys_kill(int pid)
 		t->state = TASK_FREE;
 		t->task_link = task_free_list;
 		task_free_list = t;
+		// debug_page = false;
 		sched_yield();
 	}
 }
@@ -277,6 +280,7 @@ int sys_fork()
 	
 	if ((uint32_t)cur_task)
 	{
+		// debug_page = true;
 		pid = task_create();
 		
 		if (pid < 0)
