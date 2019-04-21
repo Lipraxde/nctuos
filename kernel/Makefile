@@ -13,6 +13,7 @@ KERN_SRCFILES := kernel/entry.S \
 		kernel/entrypgdir.c \
 		kernel/assert.c \
 		kernel/kclock.c \
+		kernel/sched.c \
 		kernel/syscall.c \
 		kernel/task.c \
 		kernel/timer.c \
@@ -32,6 +33,7 @@ KERN_OBJS = kernel/entry.o \
 	kernel/entrypgdir.o \
 	kernel/assert.o \
 	kernel/kclock.o \
+	kernel/sched.o \
 	kernel/syscall.o \
 	kernel/task.o \
 	kernel/timer.o \

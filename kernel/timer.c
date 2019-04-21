@@ -1,4 +1,5 @@
 /* Reference: http://www.osdever.net/bkerndev/Docs/pit.htm */
+#include <kernel/task.h>
 #include <kernel/trap.h>
 #include <kernel/picirq.h>
 #include <inc/mmu.h>
@@ -22,12 +23,38 @@ void set_timer(int hz)
 void timer_handler()
 {
 	jiffies++;
+
+	if (cur_task == NULL)
+		return;
+
+	/* TODO: Lab 5
+	 * 1. Maintain the status of slept tasks
+	 * 
+	 * 2. Change the state of the task if needed
+	 *
+	 * 3. Maintain the time quantum of the current task
+	 *
+	 * 4. sched_yield() if the time is up for current task
+	 *
+	 */
+	struct Task *ts;
+	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
+		if (ts->state == TASK_SLEEP || ts == cur_task) {
+			ts->remind_ticks--;
+			if (ts->remind_ticks <= 0)
+				ts->state = TASK_RUNNABLE;
+		} 
+	}
+	if (cur_task->state == TASK_RUNNABLE) {
+		sched_yield();
+	}
 }
 
 unsigned long get_tick()
 {
 	return jiffies;
 }
+
 void timer_init()
 {
 	set_timer(TIME_HZ);

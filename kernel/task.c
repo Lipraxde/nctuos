@@ -233,6 +233,8 @@ static void task_free(int pid)
 
 void sys_kill(int pid)
 {
+	if (pid == 0)
+		pid = cur_task->task_id;
 	if (pid > 0 && pid < NR_TASKS)
 	{
 		struct Task *t = &tasks[pid];
@@ -240,7 +242,7 @@ void sys_kill(int pid)
 		t->state = TASK_FREE;
 		t->task_link = task_free_list;
 		task_free_list = t;
-		// sched_yield();
+		sched_yield();
 	}
 }
 
@@ -291,10 +293,9 @@ int sys_fork()
 		// Setup virtual memory
 		setupvm(tasks[pid].pgdir, 0x800000, 64*PGSIZE, 0x800000);
 		// Setup child is runnable
-		tasks[pid].remind_ticks = TIME_QUANT;
 		tasks[pid].state = TASK_RUNNABLE;
 		// Child return 0
-		tasks[pid].tf.tf_regs.reg_eax = 0;;
+		tasks[pid].tf.tf_regs.reg_eax = 0;
 		// Setup child parent
 		tasks[pid].parent_id = cur_task->task_id;
 		return pid;
@@ -307,7 +308,8 @@ int sys_fork()
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
-void task_init(struct Elf *ehdr)
+struct Task *
+task_init(struct Elf *ehdr)
 {
 	int i;
 
@@ -318,6 +320,7 @@ void task_init(struct Elf *ehdr)
 		memset(&(tasks[i]), 0, sizeof(struct Task));
 		tasks[i].state = TASK_FREE;
 		tasks[i].task_link = task_free_list;
+		tasks[i].task_id = i;
 		task_free_list = &tasks[i];
 	}
 	// Setup a TSS so that we get the right stack
@@ -337,13 +340,14 @@ void task_init(struct Elf *ehdr)
 
 	/* Setup first task */
 	i = task_create();
-	cur_task = &(tasks[i]);
+	struct Task *ret;
+	ret = &(tasks[i]);
 
 	/* For user program */
-	setupvm(cur_task->pgdir, 0x800000, 64*PGSIZE, 0x800000);
+	setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
 	extern void load_elf(struct Task *t, uint8_t *binary);
-	load_elf(cur_task, ehdr);
-	cur_task->tf.tf_eip = ehdr->e_entry;
+	load_elf(ret, ehdr);
+	ret->tf.tf_eip = ehdr->e_entry;
 	
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
@@ -353,7 +357,7 @@ void task_init(struct Elf *ehdr)
 	// Load the TSS selector 
 	ltr(GD_TSS0);
 
-	cur_task->state = TASK_RUNNING;
+	return ret;
 }
 
 //
@@ -374,4 +378,19 @@ task_pop_tf(struct Trapframe *tf)
 		"\tiret\n"
 		: : "g" (tf) : "memory");
 	panic("iret failed");  /* mostly to placate the compiler */
+}
+
+void
+task_run(struct Task *ts)
+{
+	if (cur_task && cur_task->state == TASK_RUNNING) {
+		cur_task->state = TASK_RUNNABLE;
+	}
+	cur_task = ts;
+	cur_task->state = TASK_RUNNING;
+	cur_task->remind_ticks = TIME_QUANT;
+
+	lcr3(PADDR(cur_task->pgdir));
+
+	task_pop_tf(&(cur_task->tf));
 }

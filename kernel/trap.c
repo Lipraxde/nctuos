@@ -144,13 +144,29 @@ trap_dispatch(struct Trapframe *tf)
  */
 void default_trap_handler(struct Trapframe *tf)
 {
+	if ((tf->tf_cs & 3) == 3) {
+		// Trapped from user mode.
+		assert(cur_task);
+
+		// Copy trap frame (which is currently on the stack)
+		// into 'curenv->env_tf', so that running the environment
+		// will restart at the trap point.
+		cur_task->tf = *tf;
+		// The trapframe on the stack should be ignored from here on.
+		tf = &cur_task->tf;
+	}
+
 	// Record that tf is the last real trapframe so
 	// print_trapframe can print some additional information.
 	last_tf = tf;
 
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
-	task_pop_tf(tf);
+
+	if (cur_task)
+		task_pop_tf(&cur_task->tf);
+	else
+		task_pop_tf(tf);
 }
 
 

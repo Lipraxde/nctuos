@@ -18,35 +18,26 @@ void kernel_main(void)
 
 	pic_init();
 
+	trap_init();
 	kbd_init();
 	timer_init();
-	trap_init();
 	mem_init();
 
 	// userprog address
 	struct Elf *ehdr = (struct Elf *)0xf0000000;
-	task_init(ehdr);
-
-	/* Enable interrupt */
-	__asm __volatile("sti");
+	struct Task *ts = task_init(ehdr);
 
 	/* Test for page fault handler */
 	ptr = (int*)(0x12345678);
 	// *ptr = 1;
 
-	// Load cur_task pgdir
-	lcr3(PADDR(cur_task->pgdir));
+	/* Enable interrupt */
+	__asm __volatile("sti");
 
 	/* Move to user mode */
-	asm volatile("movl %0,%%eax\n\t" \
-	"pushl %1\n\t" \
-	"pushl %%eax\n\t" \
-	"pushfl\n\t" \
-	"pushl %2\n\t" \
-	"pushl %3\n\t" \
-	"iret\n" \
-	:: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_KT | 0x00), "m" (cur_task->tf.tf_eip)
-	:"ax");
-	// :: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cur_task->tf.tf_eip)
+	// Run first task
+	cprintf("used: %d, free: %d\n", get_num_used_page(), get_num_free_page());
+	task_run(ts);
+
 	panic("Kernel exit!!");
 }

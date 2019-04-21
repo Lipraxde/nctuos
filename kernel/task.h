@@ -26,12 +26,14 @@ struct Task
 	struct Task *task_link;	// next free or next task...
 };
 
-void task_init();
+struct Task *task_init();
+void task_run(struct Task *ts) __attribute__((noreturn));
 void task_pop_tf(struct Trapframe *tf) __attribute__((noreturn));
 
 void sys_kill(int pid);
 int sys_fork(void);
 
-struct Task *cur_task;
+extern struct Task tasks[NR_TASKS];
+extern struct Task *cur_task;
 
 #endif
