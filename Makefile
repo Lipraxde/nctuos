@@ -15,6 +15,8 @@ CFLAGS += -I.
 
 OBJDIR = .
 
+CPUS ?= 1
+
 all: kernel.img
 
 $(OBJDIR)/kernel.img: boot/boot kernel/system user/userprog
@@ -35,7 +37,7 @@ clean:
 	rm -rf $(OBJDIR)/user/*.o ${OBJDIR}/user/userprog*
 
 qemu: $(OBJDIR)/kernel.img
-	qemu-system-i386 -hda kernel.img -monitor stdio
+	qemu-system-i386 -hda kernel.img -monitor stdio -smp $(CPUS)
 
 debug: $(OBJDIR)/kernel.img
-	qemu-system-i386 -hda kernel.img -monitor stdio -s -S
+	qemu-system-i386 -hda kernel.img -monitor stdio -s -S -smp $(CPUS)
