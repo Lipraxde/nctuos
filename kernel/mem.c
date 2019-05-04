@@ -631,9 +631,12 @@ mmio_map_region(physaddr_t pa, size_t size)
 	//
 	// Lab6 TODO
 	// Your code here:
-	
-
-	panic("mmio_map_region not implemented");
+	size = ROUNDUP(size, PGSIZE);	
+	assert(base + size < MMIOLIM);
+	boot_map_region(kern_pgdir, base, size, pa, PTE_PCD | PTE_PWT | PTE_W);
+	uintptr_t ret = base;
+	base += size;
+	return ret;
 }
 
 // --------------------------------------------------------------
