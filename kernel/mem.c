@@ -195,7 +195,8 @@ mem_init(void)
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE, PADDR(bootstack), (PTE_W | PTE_P));
+	// Lab6 map kernel stack in 'mem_init_mp'
+	// boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE, PADDR(bootstack), (PTE_W | PTE_P));
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -263,8 +264,12 @@ mem_init_mp(void)
 	//             it will fault rather than overwrite another CPU's stack.
 	//             Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
-	// TODO:
 	// Lab6: Your code here:
+	int i;
+	for (i = 0; i < NCPU; ++i) {
+		uint32_t ks = KSTACKTOP - i * (KSTKSIZE + KSTKGAP);
+		boot_map_region(kern_pgdir, ks - KSTKSIZE, KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_W);
+	}
 }
 
 // --------------------------------------------------------------
