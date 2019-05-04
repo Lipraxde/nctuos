@@ -48,6 +48,9 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 	case SYS_getpid:
 		retVal = cur_task->task_id;
 		break;
+	case SYS_getcid:
+		// TODO: getcid
+		break;
 	case SYS_sleep:
 		cur_task->state = TASK_SLEEP;
 		cur_task->remind_ticks = a1;

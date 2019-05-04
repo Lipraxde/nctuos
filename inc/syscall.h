@@ -7,6 +7,7 @@ enum {
 	SYS_puts = 0,
 	SYS_getc,
 	SYS_getpid,
+	SYS_getcid,
 	SYS_fork,
 	SYS_kill,
 	SYS_sleep,
@@ -22,6 +23,7 @@ enum {
 void puts(const char *s, size_t len);
 int getc(void);
 int32_t getpid(void);
+int32_t getcid(void);
 int32_t fork(void);
 int32_t kill(uint32_t pid);
 uint32_t get_num_used_page(void);

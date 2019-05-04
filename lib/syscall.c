@@ -47,6 +47,7 @@ puts(const char *s, size_t len)
 }
 
 SYSCALL_NOARG(getpid, int32_t);
+SYSCALL_NOARG(getcid, int32_t);
 SYSCALL_NOARG(fork, int32_t);
 
 int32_t
