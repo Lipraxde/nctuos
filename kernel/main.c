@@ -74,6 +74,18 @@ boot_aps(void)
 	//      -- Wait for the CPU to finish some basic setup in mp_main(
 	// 
 	// Your code here:
+	extern char mpentry_start, mpentry_end;
+	int i;
+	// Copy the code
+	memmove(KADDR(MPENTRY_PADDR), &mpentry_start,
+		&mpentry_end - &mpentry_start);
+	// Boot each AP
+	// cpus[0] is the boot cpu
+	for (i = 1; i < ncpu; ++i) {
+		mpentry_kstack = percpu_kstacks[i] + KSTKSIZE;
+		lapic_startap(cpus[i].cpu_id, MPENTRY_PADDR);
+		while(cpus[i].cpu_status != CPU_STARTED);
+	}
 }
 
 // Setup code for APs
@@ -145,6 +157,8 @@ mp_main(void)
 	// We are in high EIP now, safe to switch to kern_pgdir 
 	lcr3(PADDR(kern_pgdir));
 	cprintf("SMP: CPU %d starting\n", cpunum());
+	xchg(&thiscpu->cpu_status,CPU_STARTED);
+	while(1);
 	
 	// Your code here:
 	
