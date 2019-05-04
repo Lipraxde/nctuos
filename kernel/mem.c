@@ -300,7 +300,7 @@ page_init(void)
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
 
-	/* Lab6  TODO:
+	/* Lab6
 	 * 
 	 * modify your implementation to avoid adding the page at
 	 * MPENTRY_PADDR to the free list, so that we can safely
@@ -317,6 +317,10 @@ page_init(void)
 			is_free = true;
 		if (i < npages_basemem)
 			is_free = true;
+		// Lab6
+		if (i >= PGNUM(MPENTRY_PADDR) &&
+			 i < PGNUM(MPENTRY_PADDR + PGSIZE))
+			is_free = false;
 		if (i >= PGNUM(IOPHYSMEM) && i < PGNUM(EXTPHYSMEM))
 			is_free = false;
 		if (is_free) {
