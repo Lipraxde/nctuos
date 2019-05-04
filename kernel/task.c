@@ -5,6 +5,7 @@
 #include <inc/string.h>
 #include <inc/x86.h>
 #include <inc/memlayout.h>
+#include <kernel/cpu.h>
 #include <kernel/task.h>
 #include <kernel/mem.h>
 
@@ -23,7 +24,7 @@
 // definition of gdt specifies the Descriptor Privilege Level (DPL)
 // of that descriptor: 0 for kernel and 3 for user.
 //
-static struct Segdesc gdt[6] =
+static struct Segdesc gdt[NCPU + 5] =
 {
 	// 0x0 - unused (always faults -- for trapping NULL far pointers)
 	SEG_NULL,
@@ -233,6 +234,12 @@ static void task_free(int pid)
 	ts->pgdir = NULL;
 }
 
+// Lab6 TODO
+//
+// Modify it so that the task will be removed
+// ( we not implement signal yet so do not try to kill process
+// running on other cpu )
+//
 void sys_kill(int pid)
 {
 	if (pid == 0)

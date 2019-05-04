@@ -18,6 +18,10 @@ KERN_SRCFILES := kernel/entry.S \
 		kernel/task.c \
 		kernel/timer.c \
 		kernel/readelf.c \
+		kernel/spinlock.c \
+		kernel/lapic.c \
+		kernel/mpentry.c \
+		kernel/mpconfig.c \
 		lib/printfmt.c \
 		lib/string.c
 
@@ -38,6 +42,10 @@ KERN_OBJS = kernel/entry.o \
 	kernel/task.o \
 	kernel/timer.o \
 	kernel/readelf.o \
+	kernel/spinlock.o \
+	kernel/lapic.o \
+	kernel/mpentry.o \
+	kernel/mpconfig.o \
 	lib/printfmt.o \
 	lib/string.o
 
