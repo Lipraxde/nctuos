@@ -1,3 +1,4 @@
+#include <kernel/cpu.h>
 #include <kernel/task.h>
 #include <inc/x86.h>
 
@@ -23,13 +24,16 @@ void sched_yield(void)
 {
 	static int i = 0;
 
+	if (cpunum())
+		while(1);
+
 	do {
 		i = i == NR_TASKS ? 0 : i + 1;
 	} while (tasks[i].state != TASK_RUNNABLE);
 
-	cur_task = &tasks[i];
-	cur_task->state = TASK_RUNNING;
-	cur_task->remind_ticks = TIME_QUANT;
-	lcr3(PADDR(cur_task->pgdir));
-	ctx_switch(cur_task);
+	thiscpu->cpu_task = &tasks[i];
+	thiscpu->cpu_task->state = TASK_RUNNING;
+	thiscpu->cpu_task->remind_ticks = TIME_QUANT;
+	lcr3(PADDR(thiscpu->cpu_task->pgdir));
+	ctx_switch(thiscpu->cpu_task);
 }

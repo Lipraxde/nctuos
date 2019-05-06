@@ -1,4 +1,5 @@
 /* Reference: http://www.osdever.net/bkerndev/Docs/pit.htm */
+#include <kernel/cpu.h>
 #include <kernel/task.h>
 #include <kernel/trap.h>
 #include <kernel/picirq.h>
@@ -24,7 +25,7 @@ void timer_handler()
 {
 	jiffies++;
 
-	if (cur_task == NULL)
+	if (thiscpu->cpu_task == NULL)
 		return;
 
 	/* TODO: Lab 5
@@ -39,13 +40,13 @@ void timer_handler()
 	 */
 	struct Task *ts;
 	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
-		if (ts->state == TASK_SLEEP || ts == cur_task) {
+		if (ts->state == TASK_SLEEP || ts == thiscpu->cpu_task) {
 			ts->remind_ticks--;
 			if (ts->remind_ticks <= 0)
 				ts->state = TASK_RUNNABLE;
 		} 
 	}
-	if (cur_task->state == TASK_RUNNABLE) {
+	if (thiscpu->cpu_task->state == TASK_RUNNABLE) {
 		sched_yield();
 	}
 }

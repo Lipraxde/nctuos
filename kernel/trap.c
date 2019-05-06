@@ -1,3 +1,4 @@
+#include <kernel/cpu.h>
 #include <kernel/task.h>
 #include <kernel/trap.h>
 #include <inc/assert.h>
@@ -146,14 +147,14 @@ void default_trap_handler(struct Trapframe *tf)
 {
 	if ((tf->tf_cs & 3) == 3) {
 		// Trapped from user mode.
-		assert(cur_task);
+		assert(thiscpu->cpu_task);
 
 		// Copy trap frame (which is currently on the stack)
 		// into 'curenv->env_tf', so that running the environment
 		// will restart at the trap point.
-		cur_task->tf = *tf;
+		thiscpu->cpu_task->tf = *tf;
 		// The trapframe on the stack should be ignored from here on.
-		tf = &cur_task->tf;
+		tf = &thiscpu->cpu_task->tf;
 	}
 
 	// Record that tf is the last real trapframe so
@@ -163,8 +164,8 @@ void default_trap_handler(struct Trapframe *tf)
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
 
-	if (cur_task)
-		task_pop_tf(&cur_task->tf);
+	if (thiscpu->cpu_task)
+		task_pop_tf(&thiscpu->cpu_task->tf);
 	else
 		task_pop_tf(tf);
 }

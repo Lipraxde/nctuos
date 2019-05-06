@@ -26,6 +26,7 @@ void kernel_main(void)
 	kbd_init();
 	timer_init();
 	mem_init();
+	task_init();
 
 	// multiprocessor initialization
 	mp_init();
@@ -34,7 +35,7 @@ void kernel_main(void)
 
 	// userprog address
 	struct Elf *ehdr = (struct Elf *)0xf0000000;
-	struct Task *ts = task_init(ehdr);
+	struct Task *ts = task_init_percpu(ehdr);
 
 	/* Test for page fault handler */
 	ptr = (int*)(0x12345678);
@@ -157,14 +158,25 @@ mp_main(void)
 	// We are in high EIP now, safe to switch to kern_pgdir 
 	lcr3(PADDR(kern_pgdir));
 	cprintf("SMP: CPU %d starting\n", cpunum());
-	xchg(&thiscpu->cpu_status,CPU_STARTED);
-	while(1);
 	
 	// Your code here:
-	
+	lapic_init();
+	task_init_percpu(0);
+	lidt(&idt_pd);
 
 	// TODO: Lab6
 	// Now that we have finished some basic setup, it's time to tell
 	// boot_aps() we're up ( using xchg )
 	// Your code here:
+	xchg(&thiscpu->cpu_status,CPU_STARTED);
+
+	// /* Enable interrupt */
+	// __asm __volatile("sti");
+
+	while(1) {
+	// spin_lock(&k_lock);
+	// cprintf("SMP: CPU %d starting\n", cpunum());
+	// spin_unlock(&k_lock);
+
+	}
 }

@@ -51,13 +51,23 @@ static struct Pseudodesc gdt_pd = {
 	sizeof(gdt) - 1, (unsigned long) gdt
 };
 
-static struct tss_struct tss;
 static struct Task *task_free_list;
 struct Task tasks[NR_TASKS];
 
 extern char bootstacktop[];
 
-struct Task *cur_task = NULL; //Current running task
+int idle_entry()
+{
+/*
+	asm volatile("movl %0,%%eax\n\t" \
+			"movw %%ax,%%ds\n\t" \
+			"movw %%ax,%%es\n\t" \
+			"movw %%ax,%%fs\n\t" \
+			"movw %%ax,%%gs" \
+			:: "i" (0x20 | 0x03));
+*/
+	while(1);
+}
 
 //
 // Initialize the kernel virtual memory layout for environment e.
@@ -161,7 +171,7 @@ region_alloc(struct Task *ts, void *va, size_t len)
  * 6. Return the pid of the newly created task.
  *
  */
-int task_create()
+static int task_create(bool is_u)
 {
 	struct Task *ts = NULL;
 
@@ -181,10 +191,17 @@ int task_create()
 	/* Setup Trapframe */
 	memset( &(ts->tf), 0, sizeof(ts->tf));
 
-	ts->tf.tf_cs = GD_UT | 0x03;
-	ts->tf.tf_ds = GD_UD | 0x03;
-	ts->tf.tf_es = GD_UD | 0x03;
-	ts->tf.tf_ss = GD_UD | 0x03;
+	if (is_u) {
+		ts->tf.tf_cs = GD_UT | 0x03;
+		ts->tf.tf_ds = GD_UD | 0x03;
+		ts->tf.tf_es = GD_UD | 0x03;
+		ts->tf.tf_ss = GD_UD | 0x03;
+	} else {
+		ts->tf.tf_cs = GD_KT | 0x00;
+		ts->tf.tf_ds = GD_KD | 0x00;
+		ts->tf.tf_es = GD_KD | 0x00;
+		ts->tf.tf_ss = GD_KD | 0x00;
+	}
 	ts->tf.tf_esp = USTACKTOP;
 	ts->tf.tf_eflags = FL_IF;
 
@@ -243,7 +260,7 @@ static void task_free(int pid)
 void sys_kill(int pid)
 {
 	if (pid == 0)
-		pid = cur_task->task_id;
+		pid = thiscpu->cpu_task->task_id;
 	if (pid > 0 && pid < NR_TASKS)
 	{
 		struct Task *t = &tasks[pid];
@@ -285,16 +302,16 @@ int sys_fork()
 	/* pid for newly created process */
 	int pid;
 	
-	if ((uint32_t)cur_task)
+	if ((uint32_t)thiscpu->cpu_task)
 	{
 		// debug_page = true;
-		pid = task_create();
+		pid = task_create(true);
 		
 		if (pid < 0)
 			return -1;
 
 		// Copy trapframe
-		tasks[pid].tf = cur_task->tf;
+		tasks[pid].tf = thiscpu->cpu_task->tf;
 		// Copy stack
 		uint32_t i = USTACKTOP - USR_STACK_SIZE;
 		for(; i < USTACKTOP; i += PGSIZE){
@@ -308,19 +325,18 @@ int sys_fork()
 		// Child return 0
 		tasks[pid].tf.tf_regs.reg_eax = 0;
 		// Setup child parent
-		tasks[pid].parent_id = cur_task->task_id;
+		tasks[pid].parent_id = thiscpu->cpu_task->task_id;
 		return pid;
 	}
 
-	panic("fork but cur_task not exist!");
+	panic("fork but thiscpu->cpu_task not exist!");
 }
 
 /* TODO: Lab5
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
-struct Task *
-task_init(struct Elf *ehdr)
+void task_init(void)
 {
 	int i;
 
@@ -334,39 +350,69 @@ task_init(struct Elf *ehdr)
 		tasks[i].task_id = i;
 		task_free_list = &tasks[i];
 	}
+}
+
+//
+// Lab6 TODO
+//
+// Please modify this function to:
+//
+// 1. init idle task for non-booting AP 
+//    (remember to put the task in cpu runqueue) 
+//
+// 2. init per-CPU Runqueue
+//
+// 3. init per-CPU system registers
+//
+// 4. init per-CPU TSS
+//
+struct Task *
+task_init_percpu(struct Elf *ehdr) {
+	int i;
+	int c = cpunum();
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
-	memset(&(tss), 0, sizeof(tss));
+	memset(&(cpus[c].cpu_tss), 0, sizeof(struct tss_struct));
 	// Stack QAQ
-	tss.ts_esp0 = (uint32_t)bootstacktop;
-	tss.ts_ss0 = GD_KD;
+	cpus[c].cpu_tss.ts_esp0 = (uint32_t)(&percpu_kstacks[c]) + KSTKSIZE;
+	cpus[c].cpu_tss.ts_ss0 = GD_KD;
 
 	// fs and gs stay in user data segment
-	tss.ts_fs = GD_UD | 0x03;
-	tss.ts_gs = GD_UD | 0x03;
+	cpus[c].cpu_tss.ts_fs = GD_UD | 0x03;
+	cpus[c].cpu_tss.ts_gs = GD_UD | 0x03;
 
 	/* Setup TSS in GDT */
-	gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
-	gdt[GD_TSS0 >> 3].sd_s = 0;
+	gdt[(GD_TSS0 >> 3) + c] = SEG16(STS_T32A, (uint32_t)(&cpus[c].cpu_tss), sizeof(struct tss_struct), 0);
+	gdt[(GD_TSS0 >> 3) + c].sd_s = 0;
 
 	/* Setup first task */
-	i = task_create();
-	struct Task *ret;
-	ret = &(tasks[i]);
+	i = task_create(false);
+	if (i == -1)
+		panic("create task fail");
+	struct Task *ret = &tasks[i];
+	// defalut idle task
+	ret->tf.tf_eip = idle_entry;
 
-	/* For user program */
-	setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
-	extern void load_elf(struct Task *t, uint8_t *binary);
-	load_elf(ret, ehdr);
-	ret->tf.tf_eip = ehdr->e_entry;
-	
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
-
 	lldt(0);
 
 	// Load the TSS selector 
-	ltr(GD_TSS0);
+	ltr(GD_TSS0 + (c << 3));
+
+
+	// open user task
+	if (ehdr) {
+		/* For user program */
+		setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
+		extern void load_elf(struct Task *t, uint8_t *binary);
+		load_elf(ret, ehdr);
+		ret->tf.tf_cs = GD_UT | 0x03;
+		ret->tf.tf_ds = GD_UD | 0x03;
+		ret->tf.tf_es = GD_UD | 0x03;
+		ret->tf.tf_ss = GD_UD | 0x03;
+		ret->tf.tf_eip = ehdr->e_entry;
+	}
 
 	return ret;
 }

@@ -26,7 +26,8 @@ struct Task
 	struct Task *task_link;	// next free or next task...
 };
 
-struct Task *task_init();
+void task_init(void);
+struct Task *task_init_percpu(struct Elf *ehdr);
 void task_run(struct Task *ts) __attribute__((noreturn));
 void task_pop_tf(struct Trapframe *tf) __attribute__((noreturn));
 
@@ -34,6 +35,5 @@ void sys_kill(int pid);
 int sys_fork(void);
 
 extern struct Task tasks[NR_TASKS];
-extern struct Task *cur_task;
 
 #endif
