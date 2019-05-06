@@ -326,7 +326,7 @@ task_init(struct Elf *ehdr)
 
 	/* Initial task sturcture */
 	task_free_list = NULL;
-	for (i = NR_TASKS; i >= 0; --i)
+	for (i = NR_TASKS - 1; i >= 0; --i)
 	{
 		memset(&(tasks[i]), 0, sizeof(struct Task));
 		tasks[i].state = TASK_FREE;
