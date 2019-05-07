@@ -23,7 +23,8 @@ void set_timer(int hz)
  */
 void timer_handler()
 {
-	jiffies++;
+	if (cpunum() == 0)
+		jiffies++;
 
 	if (thiscpu->cpu_task == NULL)
 		return;

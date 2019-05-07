@@ -368,7 +368,6 @@ void task_init(void)
 //
 struct Task *
 task_init_percpu(struct Elf *ehdr) {
-	int i;
 	int c = cpunum();
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
@@ -385,14 +384,6 @@ task_init_percpu(struct Elf *ehdr) {
 	gdt[(GD_TSS0 >> 3) + c] = SEG16(STS_T32A, (uint32_t)(&cpus[c].cpu_tss), sizeof(struct tss_struct), 0);
 	gdt[(GD_TSS0 >> 3) + c].sd_s = 0;
 
-	/* Setup first task */
-	i = task_create(false);
-	if (i == -1)
-		panic("create task fail");
-	struct Task *ret = &tasks[i];
-	// defalut idle task
-	ret->tf.tf_eip = idle_entry;
-
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
 	lldt(0);
@@ -400,9 +391,19 @@ task_init_percpu(struct Elf *ehdr) {
 	// Load the TSS selector 
 	ltr(GD_TSS0 + (c << 3));
 
+	struct Task *ret;
 
 	// open user task
 	if (ehdr) {
+		/* Setup first task */
+		int i;
+		i = task_create(false);
+		if (i == -1)
+			panic("create task fail");
+		ret = &tasks[i];
+		// // defalut idle task
+		// ret->tf.tf_eip = idle_entry;
+
 		/* For user program */
 		setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
 		extern void load_elf(struct Task *t, uint8_t *binary);

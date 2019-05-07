@@ -171,7 +171,7 @@ mp_main(void)
 	xchg(&thiscpu->cpu_status,CPU_STARTED);
 
 	// /* Enable interrupt */
-	// __asm __volatile("sti");
+	__asm __volatile("sti");
 
 	while(1) {
 	// spin_lock(&k_lock);
