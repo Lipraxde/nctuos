@@ -30,6 +30,7 @@ void task_init(void);
 struct Task *task_init_percpu(struct Elf *ehdr);
 void task_pop_tf(struct Trapframe *tf) __attribute__((noreturn));
 
+void task_free(int pid);
 void sys_kill(int pid);
 int sys_fork(void);
 

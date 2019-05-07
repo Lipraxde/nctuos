@@ -234,7 +234,7 @@ static int task_create(bool is_u)
  *
  * HINT: You can refer to page_remove, ptable_remove, and pgdir_remove
  */
-static void task_free(int pid)
+void task_free(int pid)
 {
 	lcr3(PADDR(kern_pgdir));
 	struct Task *ts = &tasks[pid];
@@ -253,6 +253,11 @@ static void task_free(int pid)
 	// Umm... magic work! OwO
 	// page_free(pa2page(PADDR(ts->pgdir)));
 	ts->pgdir = NULL;
+
+	// Task has been free
+	ts->state = TASK_FREE;
+	ts->task_link = task_free_list;
+	task_free_list = ts;
 }
 
 // Lab6 TODO
@@ -268,12 +273,15 @@ void sys_kill(int pid)
 	if (pid > 0 && pid < NR_TASKS)
 	{
 		struct Task *t = &tasks[pid];
-		task_free(pid);
-		t->state = TASK_FREE;
-		t->task_link = task_free_list;
-		task_free_list = t;
-		// debug_page = false;
-		sched_yield();
+		if (t->state == TASK_RUNNING) {
+			// Let task stop, scheduler will kill it
+			t->state = TASK_STOP;
+		} else {
+			task_free(pid);
+		}
+		// Kill itself
+		if (pid == thiscpu->cpu_task->task_id)
+			sched_yield();
 	}
 }
 

@@ -45,6 +45,9 @@ void sched_yield(void)
 		}
 	}
 
+	if (thiscpu->cpu_task->state == TASK_STOP)
+		task_free(thiscpu->cpu_task->task_id);
+
 	// Test task should be preempted?
 	if (thiscpu->cpu_task->state == TASK_RUNNING) {
 		if ((thiscpu->cpu_task->pick_tick - jiffies <= 0) || (thiscpu->cpu_task->task_id < ncpu))
