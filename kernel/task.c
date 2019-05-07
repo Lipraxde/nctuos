@@ -7,7 +7,9 @@
 #include <inc/memlayout.h>
 #include <kernel/cpu.h>
 #include <kernel/task.h>
+#include <kernel/timer.h>
 #include <kernel/mem.h>
+#include <kernel/spinlock.h>
 
 // Global descriptor table.
 //
@@ -53,6 +55,8 @@ static struct Pseudodesc gdt_pd = {
 
 static struct Task *task_free_list;
 struct Task tasks[NR_TASKS];
+
+struct spinlock tasks_lock;
 
 extern char bootstacktop[];
 
@@ -166,7 +170,7 @@ region_alloc(struct Task *ts, void *va, size_t len)
  *
  * 5. Setup the task related data structure
  *    You should fill in task_id, state, parent_id,
- *    and its schedule time quantum (remind_ticks).
+ *    ~~~ and its schedule time quantum (pick_tick). ~~~
  *
  * 6. Return the pid of the newly created task.
  *
@@ -339,6 +343,8 @@ int sys_fork()
 void task_init(void)
 {
 	int i;
+
+	spin_initlock(&tasks_lock);
 
 	/* Initial task sturcture */
 	task_free_list = NULL;

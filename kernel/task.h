@@ -20,7 +20,7 @@ struct Task
 	int task_id;
 	int parent_id;
 	struct Trapframe tf;	// Saved registers
-	int32_t remind_ticks;
+	int32_t pick_tick;
 	TaskState state;	// Task state
 	pde_t *pgdir;		// Per process Page Directory
 	struct Task *task_link;	// next free or next task...

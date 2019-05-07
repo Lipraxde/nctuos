@@ -1,5 +1,6 @@
 #include <kernel/cpu.h>
 #include <kernel/task.h>
+#include <kernel/timer.h>
 #include <inc/x86.h>
 
 #define ctx_switch(ts) \
@@ -14,7 +15,7 @@
 *    it.
 *
 * 3. After your choice set cur_task to the picked task
-*    and set its state, remind_ticks, and change page
+*    and set its state, pick_tick, and change page
 *    directory to its pgdir.
 *
 * 4. CONTEXT SWITCH, leverage the macro ctx_switch(ts)
@@ -27,13 +28,23 @@ void sched_yield(void)
 	if (cpunum())
 		while(1);
 
+	// Wake up tasks
+	struct Task *ts;
+	unsigned long jiffies = get_tick();
+	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
+		if (ts->state == TASK_SLEEP) {
+			if (ts->pick_tick - jiffies <= 0)
+				ts->state = TASK_RUNNABLE;
+		} 
+	}
+
 	do {
 		i = i == NR_TASKS ? 0 : i + 1;
 	} while (tasks[i].state != TASK_RUNNABLE);
 
 	thiscpu->cpu_task = &tasks[i];
 	thiscpu->cpu_task->state = TASK_RUNNING;
-	thiscpu->cpu_task->remind_ticks = TIME_QUANT;
+	thiscpu->cpu_task->pick_tick = get_tick() + TIME_QUANT;
 	lcr3(PADDR(thiscpu->cpu_task->pgdir));
 	ctx_switch(thiscpu->cpu_task);
 }

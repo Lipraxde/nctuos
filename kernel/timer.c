@@ -39,15 +39,8 @@ void timer_handler()
 	 * 4. sched_yield() if the time is up for current task
 	 *
 	 */
-	struct Task *ts;
-	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
-		if (ts->state == TASK_SLEEP || ts == thiscpu->cpu_task) {
-			ts->remind_ticks--;
-			if (ts->remind_ticks <= 0)
-				ts->state = TASK_RUNNABLE;
-		} 
-	}
-	if (thiscpu->cpu_task->state == TASK_RUNNABLE) {
+	if (thiscpu->cpu_task->pick_tick - jiffies <= 0) {
+		thiscpu->cpu_task->state = TASK_RUNNABLE;
 		sched_yield();
 	}
 }

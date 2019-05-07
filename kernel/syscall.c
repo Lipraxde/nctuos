@@ -54,7 +54,7 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		break;
 	case SYS_sleep:
 		thiscpu->cpu_task->state = TASK_SLEEP;
-		thiscpu->cpu_task->remind_ticks = a1;
+		thiscpu->cpu_task->pick_tick = get_tick() + a1;
 		sched_yield();
 		break;
 	case SYS_kill:
