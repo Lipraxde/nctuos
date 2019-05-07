@@ -43,12 +43,9 @@ void kernel_main(void)
 
 	/* Enable interrupt */
 	__asm __volatile("sti");
-
-	/* Move to user mode */
-	// Run first task
 	cprintf("used: %d, free: %d\n", get_num_used_page(), get_num_free_page());
+	thiscpu->cpu_task = &tasks[cpunum()];
 	while(1);
-	panic("Kernel exit!!");
 }
 
 // While boot_aps is booting a given CPU, it communicates the per-core
@@ -171,6 +168,6 @@ mp_main(void)
 
 	// /* Enable interrupt */
 	__asm __volatile("sti");
+	thiscpu->cpu_task = &tasks[cpunum()];
 	while(1);
-	panic("Kernel exit!!");
 }

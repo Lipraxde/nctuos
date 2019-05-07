@@ -23,38 +23,60 @@
 */
 void sched_yield(void)
 {
-	static int i = 0;
+	int i;
+	long jiffies = get_tick();
 
 	if (cpunum()) {
-		while(1);
+		while (1);
 	}
 
-	unsigned long jiffies = get_tick();
+	// thiscpu not booted
 	if (thiscpu->cpu_task == 0)
-		thiscpu->cpu_task = &tasks[cpunum()];
-  		
-
-	if (thiscpu->cpu_task->pick_tick - jiffies > 0)
-		ctx_switch(thiscpu->cpu_task);
-	else
-		thiscpu->cpu_task->state = TASK_RUNNABLE;
+		task_pop_tf(thiscpu->last_tf);
 
 	// Wake up tasks
-	struct Task *ts;
-	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
-		if (ts->state == TASK_SLEEP) {
-			if (ts->pick_tick - jiffies <= 0)
-				ts->state = TASK_RUNNABLE;
-		} 
+	if (cpunum() == 0) {
+		struct Task *ts;
+		for (ts = &tasks[ncpu]; ts < &tasks[NR_TASKS]; ++ts) {
+			if (ts->state == TASK_SLEEP) {
+				if (ts->pick_tick - jiffies <= 0)
+					ts->state = TASK_RUNNABLE;
+			}
+		}
 	}
 
+	// Test task should be preempted?
+	if (thiscpu->cpu_task->state == TASK_RUNNING) {
+		if ((thiscpu->cpu_task->pick_tick - jiffies <= 0) || (thiscpu->cpu_task->task_id < ncpu))
+			thiscpu->cpu_task->state = TASK_RUNNABLE;
+		else
+			ctx_switch(thiscpu->cpu_task);
+	}
+
+	// Find current task
+	// My implement 'task_id = i = &tasks[i] - &tasks[0]'
+	i = thiscpu->cpu_task->task_id;
+
+	// Skip idle task
+	if (i < ncpu)
+		i = ncpu;
+
+	// Search from the next task
+	int j = i;
 	do {
-		i = i == NR_TASKS ? 0 : i + 1;
-	} while (tasks[i].state != TASK_RUNNABLE);
+		i = (i == NR_TASKS - 1) ? ncpu : i + 1;
+	} while ((tasks[i].state != TASK_RUNNABLE) && (i != j));
+
+	// No runnable task is found, select idle task
+	if ((i == j) && (tasks[i].state != TASK_RUNNABLE))
+		i = cpunum();
+
+	// Assert task start form runnable state
+	assert(tasks[i].state == TASK_RUNNABLE);
 
 	thiscpu->cpu_task = &tasks[i];
 	thiscpu->cpu_task->state = TASK_RUNNING;
-	thiscpu->cpu_task->pick_tick = get_tick() + TIME_QUANT;
+	thiscpu->cpu_task->pick_tick = get_tick() + (i < ncpu) ? 0 : TIME_QUANT;
 	lcr3(PADDR(thiscpu->cpu_task->pgdir));
 	ctx_switch(thiscpu->cpu_task);
 }

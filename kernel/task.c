@@ -405,6 +405,7 @@ task_init_percpu(struct Elf *ehdr) {
 	if (i == -1)
 		panic("create task fail");
 	ret = &tasks[i];
+	ret->state = TASK_RUNNABLE;
 
 	if (ehdr) {
 		/* For user program */
