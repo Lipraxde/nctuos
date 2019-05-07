@@ -28,14 +28,14 @@ void kernel_main(void)
 	mem_init();
 	task_init();
 
+	// userprog address
+	struct Elf *ehdr = (struct Elf *)0xf0000000;
+	struct Task *ts = task_init_percpu(ehdr);
+
 	// multiprocessor initialization
 	mp_init();
 	lapic_init();
 	boot_aps();
-
-	// userprog address
-	struct Elf *ehdr = (struct Elf *)0xf0000000;
-	struct Task *ts = task_init_percpu(ehdr);
 
 	/* Test for page fault handler */
 	ptr = (int*)(0x12345678);
