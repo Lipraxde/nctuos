@@ -2,6 +2,7 @@
 #include <inc/x86.h>
 #include <inc/string.h>
 #include <inc/stdio.h>
+#include <kernel/spinlock.h>
 
 /* These define our textpointer, our background and foreground
 *  colors (attributes), and x and y cursor coordinates */
@@ -9,8 +10,10 @@ unsigned short *textmemptr;
 int attrib = 0x0F;
 int csr_x = 0, csr_y = 0;
 
+struct spinlock screen_lock;
+
 /* Scrolls the screen */
-void scroll(void)
+static void __scroll(void)
 {
     unsigned short blank, temp;
 
@@ -33,9 +36,7 @@ void scroll(void)
     }
 }
 
-/* Updates the hardware cursor: the little blinking line
-*  on the screen under the last character pressed! */
-void move_csr(void)
+static void __move_csr(void)
 {
     unsigned short temp;
 
@@ -57,8 +58,7 @@ void move_csr(void)
     outb(0x3D5, temp);
 }
 
-/* Clears the screen */
-void cls()
+static void __cls(void)
 {
     unsigned short blank;
     int i;
@@ -76,11 +76,10 @@ void cls()
     *  hardware cursor */
     csr_x = 0;
     csr_y = 0;
-    move_csr();
+    __move_csr();
 }
 
-/* Puts a single character on the screen */
-void putch(unsigned char c)
+static void __putch(unsigned c)
 {
     unsigned short *where;
     unsigned short att = attrib << 8;
@@ -134,8 +133,41 @@ void putch(unsigned char c)
     }
 
     /* Scroll the screen if needed, and finally move the cursor */
+    __scroll();
+    __move_csr();
+}
+
+/* Scrolls the screen */
+void scroll(void)
+{
+    spin_lock(&screen_lock);
     scroll();
-    move_csr();
+    spin_unlock(&screen_lock);
+}
+
+/* Updates the hardware cursor: the little blinking line
+*  on the screen under the last character pressed! */
+void move_csr(void)
+{
+    spin_lock(&screen_lock);
+    __move_csr();
+    spin_unlock(&screen_lock);
+}
+
+/* Clears the screen */
+void cls()
+{
+    spin_lock(&screen_lock);
+    __cls();
+    spin_unlock(&screen_lock);
+}
+
+/* Puts a single character on the screen */
+void putch(unsigned char c)
+{
+    spin_lock(&screen_lock);
+    __putch(c);
+    spin_unlock(&screen_lock);
 }
 
 /* Uses the above routine to output a string... */
@@ -143,10 +175,12 @@ void puts(unsigned char *text)
 {
     int i;
 
+    spin_lock(&screen_lock);
     for (i = 0; i < strlen(text); i++)
     {
-        putch(text[i]);
+        __putch(text[i]);
     }
+    spin_unlock(&screen_lock);
 }
 
 /* Sets the forecolor and backcolor that we will use */
@@ -155,12 +189,15 @@ void settextcolor(unsigned char forecolor, unsigned char backcolor)
     /* Lab3: Use this function */
     /* Top 4 bit are the background, bottom 4 bytes
     *  are the foreground color */
+    spin_lock(&screen_lock);
     attrib = (backcolor << 4) | (forecolor & 0x0F);
+    spin_unlock(&screen_lock);
 }
 
 /* Sets our text-mode VGA pointer, then clears the screen for us */
 void init_video(void)
 {
     textmemptr = (unsigned short *)0xB8000;
+    spin_initlock(&screen_lock);
     cls();
 }
