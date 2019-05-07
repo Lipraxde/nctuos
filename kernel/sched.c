@@ -25,12 +25,22 @@ void sched_yield(void)
 {
 	static int i = 0;
 
-	if (cpunum())
+	if (cpunum()) {
 		while(1);
+	}
+
+	unsigned long jiffies = get_tick();
+	if (thiscpu->cpu_task == 0)
+		thiscpu->cpu_task = &tasks[cpunum()];
+  		
+
+	if (thiscpu->cpu_task->pick_tick - jiffies > 0)
+		ctx_switch(thiscpu->cpu_task);
+	else
+		thiscpu->cpu_task->state = TASK_RUNNABLE;
 
 	// Wake up tasks
 	struct Task *ts;
-	unsigned long jiffies = get_tick();
 	for (ts = &tasks[0]; ts < &tasks[NR_TASKS]; ++ts) {
 		if (ts->state == TASK_SLEEP) {
 			if (ts->pick_tick - jiffies <= 0)

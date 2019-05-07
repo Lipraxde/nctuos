@@ -23,6 +23,7 @@ struct CpuInfo {
 	struct Task *cpu_task;          // The currently-running task.
 	// Runqueue cpu_rq;        // cpu runqueue
 	struct tss_struct cpu_tss;        // Used by x86 to find stack for interrupt
+	struct Trapframe *last_tf;
 };
 
 // Initialized in mpconfig.c

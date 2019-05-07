@@ -26,12 +26,9 @@ void timer_handler()
 	if (cpunum() == 0)
 		jiffies++;
 
-	if (thiscpu->cpu_task == NULL)
-		return;
-
 	/* TODO: Lab 5
 	 * 1. Maintain the status of slept tasks
-	 * 
+	 *
 	 * 2. Change the state of the task if needed
 	 *
 	 * 3. Maintain the time quantum of the current task
@@ -39,10 +36,7 @@ void timer_handler()
 	 * 4. sched_yield() if the time is up for current task
 	 *
 	 */
-	if (thiscpu->cpu_task->pick_tick - jiffies <= 0) {
-		thiscpu->cpu_task->state = TASK_RUNNABLE;
-		sched_yield();
-	}
+	sched_yield();
 }
 
 unsigned long get_tick()

@@ -399,17 +399,14 @@ task_init_percpu(struct Elf *ehdr) {
 
 	struct Task *ret;
 
-	// open user task
-	if (ehdr) {
-		/* Setup first task */
-		int i;
-		i = task_create(false);
-		if (i == -1)
-			panic("create task fail");
-		ret = &tasks[i];
-		// // defalut idle task
-		// ret->tf.tf_eip = idle_entry;
+	/* Setup first task */
+	int i;
+	i = task_create(false);
+	if (i == -1)
+		panic("create task fail");
+	ret = &tasks[i];
 
+	if (ehdr) {
 		/* For user program */
 		setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
 		extern void load_elf(struct Task *t, uint8_t *binary);
@@ -419,6 +416,9 @@ task_init_percpu(struct Elf *ehdr) {
 		ret->tf.tf_es = GD_UD | 0x03;
 		ret->tf.tf_ss = GD_UD | 0x03;
 		ret->tf.tf_eip = ehdr->e_entry;
+	} else {
+		// defalut idle task
+		ret->tf.tf_eip = idle_entry;
 	}
 
 	return ret;
@@ -442,19 +442,4 @@ task_pop_tf(struct Trapframe *tf)
 		"\tiret\n"
 		: : "g" (tf) : "memory");
 	panic("iret failed");  /* mostly to placate the compiler */
-}
-
-void
-task_run(struct Task *ts)
-{
-	if (cur_task && cur_task->state == TASK_RUNNING) {
-		cur_task->state = TASK_RUNNABLE;
-	}
-	cur_task = ts;
-	cur_task->state = TASK_RUNNING;
-	cur_task->remind_ticks = TIME_QUANT;
-
-	lcr3(PADDR(cur_task->pgdir));
-
-	task_pop_tf(&(cur_task->tf));
 }

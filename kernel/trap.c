@@ -19,7 +19,7 @@ extern void syscall_dispatch(struct Trapframe *tf);
  * a saved trapframe and printing the current trapframe and print some
  * additional information in the latter case.
  */
-static struct Trapframe *last_tf;
+// use thiscpu->last_tf
 
 struct Gatedesc idt[256] = {{0}};
 
@@ -71,7 +71,7 @@ print_trapframe(struct Trapframe *tf)
 	cprintf("  trap 0x%08x %s\n", tf->tf_trapno, trapname(tf->tf_trapno));
 	// If this trap was a page fault that just happened
 	// (so %cr2 is meaningful), print the faulting linear address.
-	if (tf == last_tf && tf->tf_trapno == T_PGFLT)
+	if (tf == thiscpu->last_tf && tf->tf_trapno == T_PGFLT)
 		cprintf("  cr2  0x%08x\n", rcr2());
 	cprintf("  err  0x%08x", tf->tf_err);
 	// For page faults, print decoded fault error code:
@@ -159,15 +159,12 @@ void default_trap_handler(struct Trapframe *tf)
 
 	// Record that tf is the last real trapframe so
 	// print_trapframe can print some additional information.
-	last_tf = tf;
+	thiscpu->last_tf = tf;
 
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
 
-	if (thiscpu->cpu_task)
-		task_pop_tf(&thiscpu->cpu_task->tf);
-	else
-		task_pop_tf(tf);
+	task_pop_tf(thiscpu->last_tf);
 }
 
 

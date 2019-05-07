@@ -47,8 +47,7 @@ void kernel_main(void)
 	/* Move to user mode */
 	// Run first task
 	cprintf("used: %d, free: %d\n", get_num_used_page(), get_num_free_page());
-	task_run(ts);
-
+	while(1);
 	panic("Kernel exit!!");
 }
 
@@ -172,11 +171,6 @@ mp_main(void)
 
 	// /* Enable interrupt */
 	__asm __volatile("sti");
-
-	while(1) {
-	// spin_lock(&k_lock);
-	// cprintf("SMP: CPU %d starting\n", cpunum());
-	// spin_unlock(&k_lock);
-
-	}
+	while(1);
+	panic("Kernel exit!!");
 }
