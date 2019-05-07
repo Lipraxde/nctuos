@@ -197,6 +197,10 @@ void _start(void) {
 	"movw %%ax,%%fs\n\t" \
 	"movw %%ax,%%gs" \
 	:: "i" (0x20 | 0x03));
+
+	if (getcid())
+		while(1);
+
 	cprintf("Welcome to User Land, cheers!\n");
 
 	shell();

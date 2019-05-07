@@ -140,12 +140,14 @@ trap_dispatch(struct Trapframe *tf)
 
 }
 
+extern bool booted;
 /* 
  * Note: This is the called for every interrupt.
  */
 void default_trap_handler(struct Trapframe *tf)
 {
-	if ((tf->tf_cs & 3) == 3) {
+	if (booted && thiscpu->cpu_task != 0) {
+	// if ((tf->tf_cs & 3) == 3) {
 		// Trapped from user mode.
 		assert(thiscpu->cpu_task);
 

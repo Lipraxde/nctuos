@@ -50,7 +50,7 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 		retVal = thiscpu->cpu_task->task_id;
 		break;
 	case SYS_getcid:
-		// TODO: getcid
+		retVal = cpunum();
 		break;
 	case SYS_sleep:
 		thiscpu->cpu_task->state = TASK_SLEEP;

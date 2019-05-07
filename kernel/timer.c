@@ -25,6 +25,8 @@ void timer_handler()
 {
 	if (cpunum() == 0)
 		jiffies++;
+	else
+		lapic_eoi();
 
 	/* TODO: Lab 5
 	 * 1. Maintain the status of slept tasks

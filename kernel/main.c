@@ -9,6 +9,8 @@
 #include <kernel/trap.h>
 #include <kernel/picirq.h>
 
+bool booted = false;
+
 extern void init_video(void);
 extern struct Elf *load_elf(uint32_t pa, uint32_t offset);
 static void boot_aps(void);
@@ -41,10 +43,11 @@ void kernel_main(void)
 	ptr = (int*)(0x12345678);
 	// *ptr = 1;
 
+	cprintf("used: %d, free: %d\n", get_num_used_page(), get_num_free_page());
+
+	booted = true;
 	/* Enable interrupt */
 	__asm __volatile("sti");
-	cprintf("used: %d, free: %d\n", get_num_used_page(), get_num_free_page());
-	thiscpu->cpu_task = &tasks[cpunum()];
 	while(1);
 }
 
@@ -164,10 +167,11 @@ mp_main(void)
 	// Now that we have finished some basic setup, it's time to tell
 	// boot_aps() we're up ( using xchg )
 	// Your code here:
-	xchg(&thiscpu->cpu_status,CPU_STARTED);
+	xchg(&thiscpu->cpu_status, CPU_STARTED);
 
+	// Waiting for cpu[0] boot
+	while (!booted);
 	// /* Enable interrupt */
 	__asm __volatile("sti");
-	thiscpu->cpu_task = &tasks[cpunum()];
 	while(1);
 }

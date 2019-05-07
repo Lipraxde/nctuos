@@ -273,12 +273,14 @@ void sys_kill(int pid)
 	if (pid > 0 && pid < NR_TASKS)
 	{
 		struct Task *t = &tasks[pid];
+		spin_lock(&tasks_lock);
 		if (t->state == TASK_RUNNING) {
 			// Let task stop, scheduler will kill it
 			t->state = TASK_STOP;
 		} else {
 			task_free(pid);
 		}
+		spin_unlock(&tasks_lock);
 		// Kill itself
 		if (pid == thiscpu->cpu_task->task_id)
 			sched_yield();
@@ -317,6 +319,7 @@ int sys_fork()
 	if ((uint32_t)thiscpu->cpu_task)
 	{
 		// debug_page = true;
+		spin_lock(&tasks_lock);
 		pid = task_create(true);
 		
 		if (pid < 0)
@@ -338,6 +341,7 @@ int sys_fork()
 		tasks[pid].tf.tf_regs.reg_eax = 0;
 		// Setup child parent
 		tasks[pid].parent_id = thiscpu->cpu_task->task_id;
+		spin_unlock(&tasks_lock);
 		return pid;
 	}
 
@@ -353,7 +357,6 @@ void task_init(void)
 	int i;
 
 	spin_initlock(&tasks_lock);
-
 	/* Initial task sturcture */
 	task_free_list = NULL;
 	for (i = NR_TASKS - 1; i >= 0; --i)
@@ -427,7 +430,12 @@ task_init_percpu(struct Elf *ehdr) {
 		ret->tf.tf_eip = ehdr->e_entry;
 	} else {
 		// defalut idle task
-		ret->tf.tf_eip = idle_entry;
+		setupvm(ret->pgdir, 0x800000, 64*PGSIZE, 0x800000);
+		ret->tf.tf_cs = GD_UT | 0x03;
+		ret->tf.tf_ds = GD_UD | 0x03;
+		ret->tf.tf_es = GD_UD | 0x03;
+		ret->tf.tf_ss = GD_UD | 0x03;
+		ret->tf.tf_eip = 0x800583; // idle_entry;
 	}
 
 	return ret;

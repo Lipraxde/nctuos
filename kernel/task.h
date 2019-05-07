@@ -3,6 +3,7 @@
 
 #include <inc/trap.h>
 #include <kernel/mem.h>
+#include <kernel/spinlock.h>
 #define NR_TASKS	32
 #define TIME_QUANT	100
 
@@ -35,5 +36,7 @@ void sys_kill(int pid);
 int sys_fork(void);
 
 extern struct Task tasks[NR_TASKS];
+extern struct spinlock tasks_lock;
+
 
 #endif
