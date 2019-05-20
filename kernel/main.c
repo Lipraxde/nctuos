@@ -35,8 +35,8 @@ void kernel_main(void)
 	disk_init();
 	disk_test();
 	/*TODO: Lab7, uncommend it when you finish Lab7 3.1 part */
-	// fs_test();
-	// fs_init();
+	fs_test();
+	fs_init();
 
 	// userprog address
 	struct Elf *ehdr = (struct Elf *)0xf0000000;

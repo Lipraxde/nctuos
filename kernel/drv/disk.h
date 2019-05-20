@@ -87,6 +87,8 @@
 #define ATA_MASTER     0x00
 #define ATA_SLAVE      0x01
 
+#define SECTOR_SIZE 512
+
 struct ide_device {
 	unsigned char  Reserved;    // 0 (Empty) or 1 (This Drive really exists).
 	unsigned char  Channel;     // 0 (Primary Channel) or 1 (Secondary Channel).
@@ -108,6 +110,8 @@ struct IDEChannelRegisters {
 
 int disk_init();
 void disk_test();
+unsigned char ide_read(unsigned char channel, unsigned char reg);
+void ide_write(unsigned char channel, unsigned char reg, unsigned char data);
 int ide_read_sectors(unsigned char drive, unsigned char numsects, unsigned int lba,
 		unsigned int edi);
 int ide_write_sectors(unsigned char drive, unsigned char numsects, unsigned int lba,

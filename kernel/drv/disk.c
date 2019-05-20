@@ -6,7 +6,6 @@
 #include <inc/x86.h>
 #include <inc/mmu.h>
 
-#define SECTOR_SIZE 512
 #define FALSE 0
 #define TRUE 1
 
