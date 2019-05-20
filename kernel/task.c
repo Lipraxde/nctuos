@@ -432,7 +432,7 @@ task_init_percpu(struct Elf *ehdr) {
 		ret->tf.tf_ds = GD_UD | 0x03;
 		ret->tf.tf_es = GD_UD | 0x03;
 		ret->tf.tf_ss = GD_UD | 0x03;
-		ret->tf.tf_eip = 0x8016fd; // XXX idle_entry;
+		ret->tf.tf_eip = ehdr->e_entry; // XXX idle_entry
 	}
 
 	return ret;

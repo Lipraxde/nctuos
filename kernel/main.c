@@ -166,8 +166,9 @@ mp_main(void)
 	cprintf("SMP: CPU %d starting\n", cpunum());
 	
 	// Your code here:
+	struct Elf *ehdr = (struct Elf *)0xf0000000;
 	lapic_init();
-	task_init_percpu(0);
+	task_init_percpu(ehdr);
 	lidt(&idt_pd);
 
 	// Now that we have finished some basic setup, it's time to tell
