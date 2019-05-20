@@ -35,9 +35,11 @@ clean:
 	rm -rf $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
 	rm -rf $(OBJDIR)/lib/*.o ${OBJDIR}/lib/libnctuos.a
 	rm -rf $(OBJDIR)/user/*.o ${OBJDIR}/user/userprog*
+	rm -rf $(OBJDIR)/kernel/fs/*.o $(OBJDIR)/kernel/fs/fat/*.o
+	rm -rf $(OBJDIR)/kernel/drv/*.o
 
 qemu: $(OBJDIR)/kernel.img
-	qemu-system-i386 -hda kernel.img -monitor stdio -smp $(CPUS)
+	qemu-system-i386 -hda kernel.img -hdb lab7.img -monitor stdio -smp $(CPUS)
 
 debug: $(OBJDIR)/kernel.img
-	qemu-system-i386 -hda kernel.img -monitor stdio -s -S -smp $(CPUS)
+	qemu-system-i386 -hda kernel.img -hdb lab7.img -monitor stdio -s -S -smp $(CPUS)

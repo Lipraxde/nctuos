@@ -28,7 +28,7 @@ void timer_handler()
 	else
 		lapic_eoi();
 
-	/* TODO: Lab 5
+	/*
 	 * 1. Maintain the status of slept tasks
 	 *
 	 * 2. Change the state of the task if needed

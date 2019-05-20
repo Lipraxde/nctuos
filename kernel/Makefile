@@ -46,6 +46,13 @@ KERN_OBJS = kernel/entry.o \
 	kernel/lapic.o \
 	kernel/mpentry.o \
 	kernel/mpconfig.o \
+	kernel/drv/disk.o \
+	kernel/fs/fat/ff.o \
+	kernel/fs/diskio.o \
+	kernel/fs/fs_syscall.o \
+	kernel/fs/fs_ops.o \
+	kernel/fs/fs.o \
+	kernel/fs/fs_test.o \
 	lib/printfmt.o \
 	lib/string.o
 
@@ -53,6 +60,12 @@ KERN_OBJS := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJS))
 
 $(OBJDIR)/kernel/%.o: kernel/%.c
 	$(CC) $(CFLAGS) -nostdinc -O0 -c -o $@ $<
+
+$(OBJDIR)/kernel/drv/%.o: kernel/drv/%.c
+	$(CC) $(CFLAGS) -O0 -c -o $@ $<
+
+$(OBJDIR)/kernel/fs/%.o: kernel/fs/%.c
+	$(CC) $(CFLAGS) -O0 -c -o $@ $<
 
 $(OBJDIR)/kernel/%.o: kernel/%.S
 	$(CC) $(CFLAGS) -nostdinc -c -o $@ $<

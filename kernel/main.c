@@ -13,6 +13,8 @@ bool booted = false;
 
 extern void init_video(void);
 extern struct Elf *load_elf(uint32_t pa, uint32_t offset);
+extern int disk_init();
+extern void disk_test();
 static void boot_aps(void);
 
 void kernel_main(void)
@@ -29,6 +31,12 @@ void kernel_main(void)
 	timer_init();
 	mem_init();
 	task_init();
+
+	disk_init();
+	disk_test();
+	/*TODO: Lab7, uncommend it when you finish Lab7 3.1 part */
+	// fs_test();
+	// fs_init();
 
 	// userprog address
 	struct Elf *ehdr = (struct Elf *)0xf0000000;
@@ -60,7 +68,6 @@ void *mpentry_kstack;
 static void
 boot_aps(void)
 {
-	// TODO: Lab6
 	//
 	// 1. Write AP entry code (kernel/mpentry.S) to unused memory
 	//    at MPENTRY_PADDR. (use memmove() in lib/string.c)
@@ -136,7 +143,7 @@ mp_main(void)
 	 *
 	 * 5. Per-CPU Runqueue
 	 *
-	 * TODO: Lab6
+	 * Lab6
 	 *
 	 * 1. Modify mem_init_mp() (in kernel/mem.c) to map per-CPU stacks.
 	 *    Your code should pass the new check in check_kern_pgdir().
@@ -163,7 +170,6 @@ mp_main(void)
 	task_init_percpu(0);
 	lidt(&idt_pd);
 
-	// TODO: Lab6
 	// Now that we have finished some basic setup, it's time to tell
 	// boot_aps() we're up ( using xchg )
 	// Your code here:

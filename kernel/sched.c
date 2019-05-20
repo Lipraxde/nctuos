@@ -9,7 +9,7 @@
 
 extern bool booted;
 
-/* TODO: Lab5
+/*
 * Implement a simple round-robin scheduler (Start with the next one)
 *
 * 1. You have to remember the task you picked last time.

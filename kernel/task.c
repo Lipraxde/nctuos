@@ -150,7 +150,7 @@ region_alloc(struct Task *ts, void *va, size_t len)
 	}
 }
 
-/* TODO: Lab5
+/*
  * 1. Find a free task structure for the new task,
  *    the global task list is in the array "tasks".
  *    You should find task that is in the state "TASK_FREE"
@@ -217,7 +217,7 @@ static int task_create(bool is_u)
 }
 
 
-/* TODO: Lab5
+/*
  * This function free the memory allocated by kernel.
  *
  * 1. Be sure to change the page directory to kernel's page
@@ -260,7 +260,6 @@ void task_free(int pid)
 	task_free_list = ts;
 }
 
-// Lab6 TODO
 //
 // Modify it so that the task will be removed
 // ( we not implement signal yet so do not try to kill process
@@ -287,7 +286,7 @@ void sys_kill(int pid)
 	}
 }
 
-/* TODO: Lab 5
+/*
  * In this function, you have several things todo
  *
  * 1. Use task_create() to create an empty task, return -1
@@ -348,7 +347,7 @@ int sys_fork()
 	panic("fork but thiscpu->cpu_task not exist!");
 }
 
-/* TODO: Lab5
+/*
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
@@ -369,8 +368,6 @@ void task_init(void)
 	}
 }
 
-//
-// Lab6 TODO
 //
 // Please modify this function to:
 //
@@ -435,7 +432,7 @@ task_init_percpu(struct Elf *ehdr) {
 		ret->tf.tf_ds = GD_UD | 0x03;
 		ret->tf.tf_es = GD_UD | 0x03;
 		ret->tf.tf_ss = GD_UD | 0x03;
-		ret->tf.tf_eip = 0x800583; // idle_entry;
+		ret->tf.tf_eip = 0x8016fd; // XXX idle_entry;
 	}
 
 	return ret;

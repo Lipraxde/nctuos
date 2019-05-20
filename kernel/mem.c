@@ -634,8 +634,6 @@ mmio_map_region(physaddr_t pa, size_t size)
 	//
 	// Hint: The TA solution uses boot_map_region.
 	//
-	// Lab6 TODO
-	// Your code here:
 	size = ROUNDUP(size, PGSIZE);	
 	assert(base + size < MMIOLIM);
 	boot_map_region(kern_pgdir, base, size, pa, PTE_PCD | PTE_PWT | PTE_W);
