@@ -148,6 +148,14 @@ int file_unlink(const char *path)
     return fat_fs.ops->unlink(NULL, path);
 }
 
+int file_readdir(const char *path)
+{
+    if (fat_fs.ops->readdir == 0)
+        return -STATUS_ENOSYS;
+    // Current directory always is root '/'
+    return fat_fs.ops->readdir(NULL, path);
+}
+
 
 /**
  * @ingroup Fd

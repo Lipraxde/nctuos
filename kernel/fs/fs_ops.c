@@ -184,6 +184,28 @@ int fat_unlink(struct fs_fd* file, const char *pathname)
 	return fr2err(f_unlink(pathname));
 }
 
+int fat_readdir(struct fs_fd* file, const char *pathname)
+{
+	DIR dp;
+	FILINFO fno;
+	int fr;
+	fr = f_opendir(&dp, pathname);
+	if (fr != FR_OK)
+		return fr2err(fr);
+
+	cprintf("type\t size\t %16s\n", "name");
+	while (f_readdir(&dp, &fno) == FR_OK) {
+		if (fno.fname[0] == 0)
+			break;
+		cprintf("%s\t ", fno.fattrib & AM_DIR ? "DIR" : "FILE");
+		cprintf("%d\t ", fno.fsize);
+		cprintf("%16s\n", fno.fname);
+	}
+
+	f_closedir(&dp);
+	return 0;
+}
+
 struct fs_ops elmfat_ops = {
     .dev_name = "elmfat",
     .mount = fat_mount,
@@ -193,5 +215,6 @@ struct fs_ops elmfat_ops = {
     .read = fat_read,
     .write = fat_write,
     .lseek = fat_lseek,
-    .unlink = fat_unlink
+    .unlink = fat_unlink,
+    .readdir = fat_readdir
 };

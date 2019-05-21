@@ -26,6 +26,9 @@ int filetest3(int argc, char **argv);
 int filetest4(int argc, char **argv);
 int filetest5(int argc, char **argv);
 int spinlocktest(int argc, char **argv);
+int ls(int argc, char **argv);
+int rm(int argc, char **argv);
+int touch(int argc, char **argv);
 
 struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
@@ -40,7 +43,10 @@ struct Command commands[] = {
 	{ "filetest3", "Laqrge block test", filetest3},
 	{ "filetest4", "Error test", filetest4},
 	{ "filetest5", "unlink test", filetest5},
-	{ "spinlocktest", "Test spinlock", spinlocktest }
+	{ "spinlocktest", "Test spinlock", spinlocktest },
+	{ "ls", "list files in a directory", ls },
+	{ "rm", "remove a file", rm },
+	{ "touch", "create a file", touch }
 };
 
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
@@ -524,6 +530,49 @@ int fs_speed_test(int argc, char **argv)
         /* close file */
         close(fd);
     }
+}
+
+int ls(int argc, char **argv)
+{
+    char *path;
+    if (argc != 2)
+        path = "/";
+    else
+        path = argv[1];
+
+    if (readdir(path) < 0)
+        cprintf("fail to readdir\n");
+
+    return 0;
+}
+
+int rm(int argc, char **argv)
+{
+    if (argc != 2) {
+            cprintf("rm: missing operand\n");
+            return 0;
+    }
+
+    if(unlink(argv[1]) != 0)
+        cprintf("Cannot remove  %s\n",argv[1]);
+
+    return 0;
+}
+
+int touch(int argc, char **argv)
+{
+    if (argc != 2) {
+        cprintf("touch: missing file operand\n");
+        return 0;
+    }
+
+    int fd = open(argv[1], O_CREAT | O_RDWR, 0);
+    if (fd < 0)
+        cprintf("fail to touch %s\n", argv[1]);
+    else
+        close(fd);
+
+    return 0;
 }
 
 void shell()

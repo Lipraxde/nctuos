@@ -94,6 +94,9 @@ do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a
 	case SYS_unlink:
 		retVal = sys_unlink((const char *)a1);
 		break;
+	case SYS_readdir:
+		retVal = sys_readdir((const char *)a1);
+		break;
 	default:
 		return -1;
 	}
