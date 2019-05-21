@@ -95,7 +95,6 @@ int ide_read_sectors(unsigned char drive, unsigned char numsects, unsigned int l
 		if (ide_devices[drive].Type == IDE_ATA)
 		{
 			err = ide_ata_access(ATA_READ, drive, lba, numsects, GD_KD, edi);
-			//cprintf("read code=%d\n", err);
 		}
 		else if (ide_devices[drive].Type == IDE_ATAPI)
 			panic("ATAPI not supported!");

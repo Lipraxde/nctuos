@@ -127,7 +127,7 @@
 // Top of normal user stack
 #define USTACKTOP	(UTOP - 2*PGSIZE)
 // User stack size
-#define USR_STACK_SIZE	(4096)
+#define USR_STACK_SIZE	(4096) * 10
 
 // Where user programs generally begin
 #define UTEXT		(2*PTSIZE)

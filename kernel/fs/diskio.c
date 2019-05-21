@@ -86,7 +86,8 @@ DSTATUS disk_status (BYTE pdrv)
  *       to help you get the disk status.
  */
   unsigned char status = ide_read(ATA_PRIMARY, ATA_REG_STATUS);
-  if (status == ATA_SR_DRDY)
+  // XXX: Maybe worng
+  if (status & ATA_SR_DRDY)
     return 0;
   return STA_NOINIT;
 }
@@ -104,10 +105,19 @@ DSTATUS disk_status (BYTE pdrv)
 DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 {
     (void)pdrv;
-    int err = ide_read_sectors(DISK_ID, count, sector, (unsigned int)buff);
-    if (err == 0)
-        return RES_OK;
-    return -RES_ERROR;
+    int i;
+    BYTE *ptr = buff;
+
+    // XXX: I can not read 'count' sector by ide_read_sectors(DISK_ID, count ...
+    for (i = 0; i < count; ++i) {
+        int err = ide_read_sectors(DISK_ID, 1, sector, (unsigned int)ptr);
+        ptr += SECTOR_SIZE;
+        sector++;
+        if (err != 0)
+            return -RES_ERROR;
+    }
+
+    return RES_OK;
 }
 
 /**
@@ -123,10 +133,18 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 {
     (void)pdrv;
-    int err = ide_write_sectors(DISK_ID, count, sector, (unsigned int)buff);
-    if (err == 0)
-        return RES_OK;
-    return -RES_ERROR;
+    int i;
+    BYTE *ptr = buff;
+
+    for (i = 0; i < count; ++i) {
+        int err = ide_write_sectors(DISK_ID, 1, sector, (unsigned int)ptr);
+        ptr += SECTOR_SIZE;
+        sector++;
+        if (err != 0)
+            return -RES_ERROR;
+    }
+
+    return RES_OK;
 }
 
 /**

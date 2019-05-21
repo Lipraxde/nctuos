@@ -48,30 +48,83 @@
 // Below is POSIX like I/O system call 
 int sys_open(const char *file, int flags, int mode)
 {
-    //We dont care the mode.
-/* TODO */
+	//We dont care the mode.
+	int fd = fd_new();
+	if (fd == -1)
+		return -STATUS_ENOSPC;
+
+	struct fs_fd *p = fd_get(fd);
+	int err = file_open(p, file, flags);
+
+	fd_put(p);
+	if (err < 0) {
+		fd_put(p); // clean fd
+		return err;
+	}
+	return fd;
 }
 
 int sys_close(int fd)
 {
-/* TODO */
+	struct fs_fd *p = fd_get(fd);
+	if (!p)
+		return -STATUS_EINVAL;
+	int err = file_close(p);
+
+	fd_put(p);
+	if (err < 0)
+		return err;
+	fd_put(p);
+	return 0;
 }
+
 int sys_read(int fd, void *buf, size_t len)
 {
-/* TODO */
+	struct fs_fd *p = fd_get(fd);
+	if (!p)
+		return -STATUS_EBADF;
+	if (!buf || len <= 0)
+		return -STATUS_EINVAL;
+	if (len > p->size)
+		len = p->size;
+	int ret = file_read(p, buf, len);
+	fd_put(p);
+	return ret;
 }
+
 int sys_write(int fd, const void *buf, size_t len)
 {
-/* TODO */
+	struct fs_fd *p = fd_get(fd);
+	if (!p)
+		return -STATUS_EBADF;
+        if (!buf || len <= 0)
+                return -STATUS_EINVAL;
+	int ret = file_write(p, buf, len);
+	fd_put(p);
+	return ret;
 }
 
 /* Note: Check the whence parameter and calcuate the new offset value before do file_seek() */
 off_t sys_lseek(int fd, off_t offset, int whence)
 {
-/* TODO */
+	struct fs_fd *p = fd_get(fd);
+	if (!p)
+		return -STATUS_EBADF;
+	if (whence == SEEK_END)
+		offset += p->size;
+	else if (whence == SEEK_CUR)
+		offset += p->pos;
+	else if (whence != SEEK_SET)
+		return -STATUS_EINVAL;
+	int err = file_lseek(p, offset);
+	fd_put(p);
+	if (err < 0)
+		return err;
+	else
+		return offset;
 }
 
 int sys_unlink(const char *pathname)
 {
-/* TODO */ 
+	return file_unlink(pathname);
 }
